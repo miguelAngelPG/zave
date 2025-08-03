@@ -1,8 +1,10 @@
 import { Header } from "@/src/components/molecules/AlertCard/Header";
 import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
+import { ActivitySection } from "@/src/components/organisms/ActivitySection/ActivitySection";
 import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
 import { InsightsSection } from "@/src/components/organisms/InsightsSection/InsightsSection";
 import { AccountData } from "@/src/types/accounts.types";
+import { TransactionData } from "@/src/types/activity.types";
 import { StatsData } from "@/src/types/balance.types";
 import { InsightData } from "@/src/types/insights.types";
 import { StatusBar } from "expo-status-bar";
@@ -65,6 +67,38 @@ export default function HomeScreen() {
         },
     ];
 
+    const transactionsData: TransactionData[] = [
+        {
+            id: '1',
+            name: 'Walmart',
+            amount: 1250,
+            date: 'Hoy,',
+            time: '14:30',
+            status: 'DEUDA',
+            type: 'expense',
+            emoji: '🛒',
+        },
+        {
+            id: '2',
+            name: 'Depósito Nómina',
+            amount: 15000,
+            date: 'Ayer,',
+            time: '09:00',
+            status: 'PAGADO',
+            type: 'income',
+            emoji: '💰',
+            bankIndicatorColor: '#3B82F6',
+        },
+    ];
+
+    const handleTransactionPress = (transactionId: string): void => {
+        console.log('Transaction pressed:', transactionId);
+    };
+
+    const handleViewAllActivity = (): void => {
+        console.log('View all activity');
+    };
+
     const handleViewMoreInsights = (): void => {
         console.log('View more insights pressed');
     };
@@ -124,6 +158,11 @@ export default function HomeScreen() {
                     onInsightPress={handleInsightPress}
                 />
 
+                <ActivitySection
+                    transactions={transactionsData}
+                    onTransactionPress={handleTransactionPress}
+                    onViewAll={handleViewAllActivity}
+                />
             </ScrollView>
             {/* <DashboardScreen /> */}
 
