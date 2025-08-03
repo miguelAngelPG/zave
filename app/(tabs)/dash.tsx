@@ -1,7 +1,10 @@
 import { Header } from "@/src/components/molecules/AlertCard/Header";
+import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
 import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
+import { AccountData } from "@/src/types/accounts.types";
 import { StatsData } from "@/src/types/balance.types";
-import { StyleSheet, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -13,12 +16,58 @@ export default function HomeScreen() {
         goal: "68%"
     };
 
+    const accountsData: AccountData[] = [
+        {
+            id: '1',
+            name: 'BBVA',
+            bankCode: 'BBVA',
+            amount: 2450,
+            dueInfo: 'Vence mañana',
+            urgencyLevel: 'urgent',
+            backgroundColor: '#3B82F6',
+            iconColor: '#FFFFFF',
+        },
+        {
+            id: '2',
+            name: 'Santander',
+            bankCode: 'SAN',
+            amount: 1890,
+            dueInfo: 'Vence en 5 días',
+            urgencyLevel: 'warning',
+            backgroundColor: '#EF4444',
+            iconColor: '#FFFFFF',
+        },
+        {
+            id: '3',
+            name: 'Nu Bank',
+            bankCode: 'NU',
+            amount: 5420,
+            dueInfo: 'Disponible',
+            urgencyLevel: 'normal',
+            backgroundColor: '#8B5CF6',
+            iconColor: '#FFFFFF',
+        },
+    ];
+
     const handleExpandPress = (isExpanded: boolean): void => {
         console.log('Balance expanded:', isExpanded);
     };
 
+    const handleAccountPress = (accountId: string): void => {
+        console.log('Account pressed:', accountId);
+    };
+
+    const handleManagePress = (): void => {
+        console.log('Manage accounts pressed');
+    };
+
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <StatusBar
+                backgroundColor="#000000"
+                translucent={false}
+                style="light"
+            />
             <Header
                 userName="Carlos"
                 // userPhoto="https://..."
@@ -27,7 +76,11 @@ export default function HomeScreen() {
                 onNotificationsPress={() => { }}
                 hasNotifications={true}
             />
-            <View style={styles.container}>
+            <ScrollView
+                style={styles.container}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+            >
                 <BalanceSection
                     greeting="¡Buen día!"
                     amount={5247}
@@ -35,7 +88,13 @@ export default function HomeScreen() {
                     stats={statsData}
                     onExpandPress={handleExpandPress}
                 />
-            </View>
+                <AccountsSection
+                    accounts={accountsData}
+                    onAccountPress={handleAccountPress}
+                    onManagePress={handleManagePress}
+                />
+
+            </ScrollView>
             {/* <DashboardScreen /> */}
 
         </SafeAreaView>
