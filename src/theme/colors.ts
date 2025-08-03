@@ -32,3 +32,24 @@ export const colors = {
   },
   border: '#E5E7EB',
 };
+
+export const darkTheme = {
+  text: {
+    primary: '#FFFFFF',
+    secondary: '#9CA3AF',
+    tertiary: '#6B7280',
+    inverse: '#111827',
+    disabled: '#4B5563',
+  },
+  background: {
+    primary: '#000000',
+    secondary: '#1A1A1A',
+    card: '#1F2937',
+  },
+  semantic: {
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    info: '#3B82F6',
+  },
+};

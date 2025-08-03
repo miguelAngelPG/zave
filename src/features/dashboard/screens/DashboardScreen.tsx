@@ -1,18 +1,17 @@
 import React from 'react';
 import {
-  View,
-  StyleSheet,
-  ScrollView,
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Text } from '../../../components/atoms/Text/Text';
+import { AlertCard } from '../../../components/molecules/AlertCard/AlertCard';
 import { BalanceCard } from '../../../components/molecules/BalanceCard/BalanceCard';
 import { QuickAction } from '../../../components/molecules/QuickAction/QuickAction';
-import { AlertCard } from '../../../components/molecules/AlertCard/AlertCard';
-import { TransactionItem } from '../components/TransactionItem';
 import { colors, spacing } from '../../../theme';
+import { TransactionItem } from '../components/TransactionItem';
 
 // Mock data - En producción vendría de Redux/Context/SWR
 const mockData = {
@@ -90,14 +89,14 @@ export const DashboardScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      {/* <StatusBar style="dark" /> */}
       
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
           <Text variant="h2">☰</Text>
         </TouchableOpacity>
-        <Text variant="h2" weight="bold">
+        <Text variant="h2" weight="800">
           Zave
         </Text>
         <TouchableOpacity>
@@ -119,7 +118,7 @@ export const DashboardScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text variant="h3" weight="semibold" style={styles.sectionTitle}>
+          <Text variant="h3" weight="600" style={styles.sectionTitle}>
             Acciones Rápidas
           </Text>
           <View style={styles.quickActionsContainer}>
@@ -148,7 +147,7 @@ export const DashboardScreen: React.FC = () => {
 
         {/* Alerts */}
         <View style={styles.section}>
-          <Text variant="h3" weight="semibold" style={styles.sectionTitle}>
+          <Text variant="h3" weight="700" style={styles.sectionTitle}>
             Alertas
           </Text>
           {mockData.alerts.map((alert) => (
@@ -165,11 +164,11 @@ export const DashboardScreen: React.FC = () => {
         {/* Recent Transactions */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text variant="h3" weight="semibold">
+            <Text variant="h3" weight="600">
               Transacciones Recientes
             </Text>
             <TouchableOpacity>
-              <Text variant="caption" style={{ color: colors.primary.main }}>
+              <Text variant="caption" style={{ color: colors.primary[500] }}>
                 Ver todas
               </Text>
             </TouchableOpacity>
