@@ -1,8 +1,10 @@
 import { Header } from "@/src/components/molecules/AlertCard/Header";
 import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
 import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
+import { InsightsSection } from "@/src/components/organisms/InsightsSection/InsightsSection";
 import { AccountData } from "@/src/types/accounts.types";
 import { StatsData } from "@/src/types/balance.types";
+import { InsightData } from "@/src/types/insights.types";
 import { StatusBar } from "expo-status-bar";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -49,6 +51,28 @@ export default function HomeScreen() {
         },
     ];
 
+    const insightsData: InsightData[] = [
+        {
+            id: '1',
+            message: 'Puedes ahorrar $340 reduciendo gastos en entretenimiento',
+            type: 'positive',
+        },
+        {
+            id: '2',
+            message: 'Tu meta mensual va 12% adelantada',
+            subtitle: 'Tendencia positiva • Sigue así',
+            type: 'achievement',
+        },
+    ];
+
+    const handleViewMoreInsights = (): void => {
+        console.log('View more insights pressed');
+    };
+
+    const handleInsightPress = (insightId: string): void => {
+        console.log('Insight pressed:', insightId);
+    };
+
     const handleExpandPress = (isExpanded: boolean): void => {
         console.log('Balance expanded:', isExpanded);
     };
@@ -92,6 +116,12 @@ export default function HomeScreen() {
                     accounts={accountsData}
                     onAccountPress={handleAccountPress}
                     onManagePress={handleManagePress}
+                />
+
+                <InsightsSection
+                    insights={insightsData}
+                    onViewMore={handleViewMoreInsights}
+                    onInsightPress={handleInsightPress}
                 />
 
             </ScrollView>
