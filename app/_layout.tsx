@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -19,18 +20,24 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerStyle:{
-            backgroundColor: '#fff',
-          },
-          headerTintColor: '#000',
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <StatusBar
+        backgroundColor="#000000"
+        translucent={false}
+        style="light"
+      />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: '#000',
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </SafeAreaView>
     </ThemeProvider>
   );
 }

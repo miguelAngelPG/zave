@@ -7,7 +7,6 @@ import { AccountData } from "@/src/types/accounts.types";
 import { TransactionData } from "@/src/types/activity.types";
 import { StatsData } from "@/src/types/balance.types";
 import { InsightData } from "@/src/types/insights.types";
-import { StatusBar } from "expo-status-bar";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -121,11 +120,6 @@ export default function HomeScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
-            <StatusBar
-                backgroundColor="#000000"
-                translucent={false}
-                style="light"
-            />
             <Header
                 userName="Carlos"
                 // userPhoto="https://..."
