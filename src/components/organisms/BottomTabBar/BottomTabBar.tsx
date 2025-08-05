@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FAB } from '../../atoms/FAB/FAB';
+// import { FAB } from '../../atoms/FAB/FAB';
 
 // export const BottomTabBar: React.FC<BottomTabBarProps> = ({
 //   activeTab,
@@ -60,14 +60,14 @@ import { FAB } from '../../atoms/FAB/FAB';
 export const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     const insets = useSafeAreaInsets();
 
-    const handleFABPress = () => {
-    console.log('FAB pressed - Open transaction input');
-    // Aquí abres el modal/screen para agregar transacción
-  };
+    //     const handleFABPress = () => {
+    //     console.log('FAB pressed - Open transaction input');
+    //     // Aquí abres el modal/screen para agregar transacción
+    //   };
 
-return (
+    return (
         <>
-            <FAB onPress={handleFABPress} />
+            {/* <FAB onPress={handleFABPress} /> */}
             <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
                 {state.routes.map((route: any, index: number) => {
                     const { options } = descriptors[route.key];

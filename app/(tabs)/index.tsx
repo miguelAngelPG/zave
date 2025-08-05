@@ -4,13 +4,17 @@ import { AccountsSection } from '@/src/components/organisms/AccountsSection/Acco
 import { ActivitySection } from '@/src/components/organisms/ActivitySection/ActivitySection';
 import { BalanceSection } from '@/src/components/organisms/BalanceSection/BalanceSection';
 import { InsightsSection } from '@/src/components/organisms/InsightsSection/InsightsSection';
+import { SpeedDial } from '@/src/components/organisms/SpeedDial/SpeedDial';
+import { useSpeedDial } from '@/src/hooks/useSpeedDial';
 import { AccountData } from '@/src/types/accounts.types';
 import { TransactionData } from '@/src/types/activity.types';
 import { StatsData } from '@/src/types/balance.types';
 import { InsightData } from '@/src/types/insights.types';
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
+
+  const { isProcessing, handleMethodSelect } = useSpeedDial();
 
   const statsData: StatsData = {
     spent: "23%",
@@ -120,7 +124,7 @@ export default function HomeScreen() {
 
 
   return (
-    <>
+    <View style={styles.container}>
       <Header
         userName="Carlos"
         // userPhoto="https://..."
@@ -159,7 +163,11 @@ export default function HomeScreen() {
           onViewAll={handleViewAllActivity}
         />
       </ScrollView>
-    </>
+      <SpeedDial
+        onMethodSelect={handleMethodSelect}
+        isProcessing={isProcessing}
+      />
+    </View>
     // <ParallaxScrollView
     //   headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
     //   headerImage={
