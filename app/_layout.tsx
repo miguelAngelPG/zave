@@ -1,10 +1,10 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { ThemeProvider } from '@/theme/theme-provider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
@@ -19,7 +19,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider>
       <StatusBar
         backgroundColor="#000000"
         translucent={false}

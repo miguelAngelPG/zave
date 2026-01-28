@@ -1,16 +1,21 @@
-import { Header } from "@/src/components/molecules/AlertCard/Header";
-import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
-import { ActivitySection } from "@/src/components/organisms/ActivitySection/ActivitySection";
-import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
-import { InsightsSection } from "@/src/components/organisms/InsightsSection/InsightsSection";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
+import { View } from "@/components/ui/view";
+import { useColor } from "@/hooks/useColor";
 import { AccountData } from "@/src/types/accounts.types";
 import { TransactionData } from "@/src/types/activity.types";
 import { StatsData } from "@/src/types/balance.types";
 import { InsightData } from "@/src/types/insights.types";
-import { ScrollView, StyleSheet } from "react-native";
+import { Award, Bell, Sparkles, TrendingUp } from "lucide-react-native";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+    const backgroundColor = useColor('background');
+    const primaryColor = useColor('primary');
 
     const statsData: StatsData = {
         spent: "23%",
@@ -90,83 +95,129 @@ export default function HomeScreen() {
         },
     ];
 
-    const handleTransactionPress = (transactionId: string): void => {
-        console.log('Transaction pressed:', transactionId);
-    };
-
-    const handleViewAllActivity = (): void => {
-        console.log('View all activity');
-    };
-
-    const handleViewMoreInsights = (): void => {
-        console.log('View more insights pressed');
-    };
-
-    const handleInsightPress = (insightId: string): void => {
-        console.log('Insight pressed:', insightId);
-    };
-
-    const handleExpandPress = (isExpanded: boolean): void => {
-        console.log('Balance expanded:', isExpanded);
-    };
-
-    const handleAccountPress = (accountId: string): void => {
-        console.log('Account pressed:', accountId);
-    };
-
-    const handleManagePress = (): void => {
-        console.log('Manage accounts pressed');
-    };
-
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
-            <Header
-                userName="Carlos"
-                // userPhoto="https://..."
-                onProfilePress={() => { }}
-                onAIPress={() => { }}
-                onNotificationsPress={() => { }}
-                hasNotifications={true}
-            />
+        <SafeAreaView style={{ flex: 1, backgroundColor }}>
             <ScrollView
-                style={styles.container}
+                style={{ flex: 1, backgroundColor }}
+                contentContainerStyle={{ padding: 20, gap: 24 }}
                 showsVerticalScrollIndicator={false}
-                bounces={false}
             >
-                <BalanceSection
-                    greeting="¡Buen día!"
-                    amount={5247}
-                    subtitle="Tienes disponible para gastar"
-                    stats={statsData}
-                    onExpandPress={handleExpandPress}
-                />
-                <AccountsSection
-                    accounts={accountsData}
-                    onAccountPress={handleAccountPress}
-                    onManagePress={handleManagePress}
-                />
+                {/* Header */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <Avatar>
+                            <AvatarImage source={{ uri: "https://github.com/shadcn.png" }} />
+                            <AvatarFallback>CN</AvatarFallback>
+                        </Avatar>
+                        <View>
+                            <Text style={{ fontSize: 14, opacity: 0.7 }}>Hola,</Text>
+                            <Text style={{ fontSize: 20, fontWeight: '700' }}>Carlos</Text>
+                        </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <Button variant="ghost" size="icon" icon={Bell} />
+                        <Button variant="ghost" size="icon" icon={Sparkles} />
+                    </View>
+                </View>
 
-                <InsightsSection
-                    insights={insightsData}
-                    onViewMore={handleViewMoreInsights}
-                    onInsightPress={handleInsightPress}
-                />
+                {/* Balance Section */}
+                <Card>
+                    <CardHeader>
+                        <CardDescription>Disponible para gastar</CardDescription>
+                        <CardTitle style={{ fontSize: 32 }}>$5,247.00</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View>
+                                <Text style={{ fontSize: 12, opacity: 0.7 }}>Gastado</Text>
+                                <Text style={{ fontWeight: '600' }}>{statsData.spent}</Text>
+                            </View>
+                            <View>
+                                <Text style={{ fontSize: 12, opacity: 0.7 }}>Crédito</Text>
+                                <Text style={{ fontWeight: '600' }}>{statsData.credit}</Text>
+                            </View>
+                            <View>
+                                <Text style={{ fontSize: 12, opacity: 0.7 }}>Días rest.</Text>
+                                <Text style={{ fontWeight: '600' }}>{statsData.days}</Text>
+                            </View>
+                            <View>
+                                <Text style={{ fontSize: 12, opacity: 0.7 }}>Meta</Text>
+                                <Text style={{ fontWeight: '600' }}>{statsData.goal}</Text>
+                            </View>
+                        </View>
+                    </CardContent>
+                </Card>
 
-                <ActivitySection
-                    transactions={transactionsData}
-                    onTransactionPress={handleTransactionPress}
-                    onViewAll={handleViewAllActivity}
-                />
+                {/* Accounts Section */}
+                <View style={{ gap: 12 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text variant="title">Mis Cuentas</Text>
+                        <Button variant="ghost" size="sm" label="Gestionar" />
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                        {accountsData.map((account) => (
+                            <Card key={account.id} style={{ width: 160, backgroundColor: account.backgroundColor }}>
+                                <CardHeader>
+                                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{account.bankCode.substring(0, 2)}</Text>
+                                    </View>
+                                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>{account.name}</Text>
+                                </CardHeader>
+                                <CardContent>
+                                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>${account.amount}</Text>
+                                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>{account.dueInfo}</Text>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </ScrollView>
+                </View>
+
+                {/* Insights Section */}
+                <View style={{ gap: 12 }}>
+                    <Text variant="title">Insights</Text>
+                    {insightsData.map((insight) => (
+                        <Card key={insight.id} style={{ borderColor: insight.type === 'positive' ? '#22C55E' : '#EAB308', borderWidth: 1 }}>
+                            <CardContent style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 }}>
+                                <Icon name={insight.type === 'positive' ? TrendingUp : Award} size={24} color={insight.type === 'positive' ? '#22C55E' : '#EAB308'} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontWeight: '500' }}>{insight.message}</Text>
+                                    {insight.subtitle && <Text style={{ fontSize: 12, opacity: 0.6 }}>{insight.subtitle}</Text>}
+                                </View>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </View>
+
+                {/* Activity Section */}
+                <View style={{ gap: 12 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text variant="title">Actividad Reciente</Text>
+                        <Button variant="link" label="Ver todo" />
+                    </View>
+                    {transactionsData.map((transaction) => (
+                        <Card key={transaction.id}>
+                            <CardContent style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: useColor('secondary'), alignItems: 'center', justifyContent: 'center' }}>
+                                        <Text style={{ fontSize: 20 }}>{transaction.emoji}</Text>
+                                    </View>
+                                    <View>
+                                        <Text style={{ fontWeight: '600' }}>{transaction.name}</Text>
+                                        <Text style={{ fontSize: 12, opacity: 0.6 }}>{transaction.date} {transaction.time}</Text>
+                                    </View>
+                                </View>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <Text style={{ fontWeight: '700', color: transaction.type === 'expense' ? useColor('text') : '#22C55E' }}>
+                                        {transaction.type === 'expense' ? '-' : '+'}${transaction.amount}
+                                    </Text>
+                                    <Text style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{transaction.status}</Text>
+                                </View>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </View>
+
             </ScrollView>
-            {/* <DashboardScreen /> */}
-
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#000000', // darkTheme.background.primary
-    },
-});
