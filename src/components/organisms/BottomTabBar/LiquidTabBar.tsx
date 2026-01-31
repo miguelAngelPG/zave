@@ -2,16 +2,59 @@ import { useColor } from '@/hooks/useColor';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Camera, CreditCard, House, Keyboard, MessageSquare, Mic, Sparkles, X } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown, FadeInUp, LinearTransition, ZoomIn, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, LinearTransition, ZoomIn, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 const SPRING_CONFIG = { damping: 15, stiffness: 120, mass: 0.6 };
+const MAX_WIDTH = 360; // Max width for the "Island" dock
 
 type AiMode = 'closed' | 'menu' | 'voice';
+
+// Sub-component for animated icons
+const TabIcon = ({ icon: Icon, isFocused, color, onPress, disabled }: any) => {
+    const scale = useSharedValue(1);
+
+    useEffect(() => {
+        if (isFocused) {
+            // Little bounce effect when selected
+            scale.value = withSequence(
+                withTiming(1.2, { duration: 150 }),
+                withSpring(1, { damping: 12 })
+            );
+        } else {
+            scale.value = withSpring(1);
+        }
+    }, [isFocused]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }]
+    }));
+
+    return (
+        <TouchableOpacity onPress={onPress} disabled={disabled} style={styles.iconBtn} activeOpacity={0.7}>
+            <Animated.View style={animatedStyle}>
+                <Icon size={24} color={color} strokeWidth={isFocused ? 2.5 : 2} />
+                {/* Optional Glow Dot for active state */}
+                {isFocused && (
+                    <Animated.View
+                        entering={ZoomIn.duration(200)}
+                        style={{
+                            position: 'absolute',
+                            bottom: -8,
+                            alignSelf: 'center',
+                            width: 4, height: 4, borderRadius: 2,
+                            backgroundColor: color
+                        }}
+                    />
+                )}
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
 
 export const LiquidTabBar = ({ state, descriptors, navigation, onChatPress }: any) => {
     const insets = useSafeAreaInsets();
@@ -25,8 +68,11 @@ export const LiquidTabBar = ({ state, descriptors, navigation, onChatPress }: an
 
     // Animation Styles
     const containerStyle = useAnimatedStyle(() => {
+        // Calculate target width with a maximum cap to prevent "overflow" look on large screens
+        const targetWidth = isExpanded ? Math.min(width - 40, MAX_WIDTH) : 240;
+
         return {
-            width: withSpring(isExpanded ? width - 40 : 240, SPRING_CONFIG), // Fixed collapsed width for symmetry
+            width: withSpring(targetWidth, SPRING_CONFIG),
             height: withSpring(isExpanded ? expandedHeight : 65, SPRING_CONFIG),
             borderRadius: withSpring(isExpanded ? 36 : 32.5, SPRING_CONFIG),
             transform: [
@@ -74,24 +120,32 @@ export const LiquidTabBar = ({ state, descriptors, navigation, onChatPress }: an
                     containerStyle
                 ]}
             >
-                {/* NAVIGATION ROW - Anchored at Bottom, Absolute to prevent layout shift */}
+                {/* NAVIGATION ROW */}
                 <View style={styles.navRow}>
 
                     {/* Home */}
                     <Animated.View style={[styles.iconWrapper, navIconsStyle]}>
-                        <TouchableOpacity style={styles.iconBtn} disabled={isExpanded} onPress={() => handlePress('index', state.index === 0)}>
-                            <House size={24} color={state.index === 0 ? primaryColor : inactiveColor} />
-                        </TouchableOpacity>
+                        <TabIcon
+                            icon={House}
+                            isFocused={state.index === 0}
+                            color={state.index === 0 ? primaryColor : inactiveColor}
+                            onPress={() => handlePress('index', state.index === 0)}
+                            disabled={isExpanded}
+                        />
                     </Animated.View>
 
-                    {/* GAP for Trigger Button */}
+                    {/* GAP */}
                     <View style={{ width: 60 }} />
 
                     {/* Wallet */}
                     <Animated.View style={[styles.iconWrapper, navIconsStyle]}>
-                        <TouchableOpacity style={styles.iconBtn} disabled={isExpanded} onPress={() => handlePress('accounts', state.index === 1)}>
-                            <CreditCard size={24} color={state.index === 1 ? primaryColor : inactiveColor} />
-                        </TouchableOpacity>
+                        <TabIcon
+                            icon={CreditCard}
+                            isFocused={state.index === 1}
+                            color={state.index === 1 ? primaryColor : inactiveColor}
+                            onPress={() => handlePress('accounts', state.index === 1)}
+                            disabled={isExpanded}
+                        />
                     </Animated.View>
                 </View>
 
@@ -148,7 +202,7 @@ export const LiquidTabBar = ({ state, descriptors, navigation, onChatPress }: an
                     </View>
                 )}
 
-                {/* FLOATING TRIGGER BUTTON - Absolute Center */}
+                {/* FLOATING TRIGGER BUTTON */}
                 <View style={styles.triggerContainer} pointerEvents="box-none">
                     <TouchableOpacity
                         style={styles.aiTriggerBtn}
@@ -179,7 +233,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        alignItems: 'center', // Crucial for centering
+        alignItems: 'center',
         justifyContent: 'flex-end',
     },
     dock: {
@@ -190,7 +244,7 @@ const styles = StyleSheet.create({
         elevation: 10,
         borderWidth: 1,
         overflow: 'hidden',
-        alignItems: 'center', // Centers content inside
+        alignItems: 'center',
     },
     navRow: {
         flexDirection: 'row',
@@ -199,7 +253,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        position: 'absolute', // Anchored
+        position: 'absolute',
         bottom: 0,
     },
     triggerContainer: {
@@ -207,7 +261,7 @@ const styles = StyleSheet.create({
         bottom: 5,
         left: 0,
         right: 0,
-        alignItems: 'center', // Perfectly centers the button
+        alignItems: 'center',
         zIndex: 20,
     },
     iconWrapper: {
@@ -247,7 +301,7 @@ const styles = StyleSheet.create({
     expandedContent: {
         width: '100%',
         height: '100%',
-        paddingBottom: 60, // Space for trigger
+        paddingBottom: 60,
         justifyContent: 'flex-end',
         alignItems: 'center',
     },
@@ -269,8 +323,8 @@ const styles = StyleSheet.create({
     actionRow: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        justifyContent: 'center', // Center buttons
-        gap: 20, // Explicit gap for symmetry
+        justifyContent: 'center',
+        gap: 20,
         width: '100%',
         paddingBottom: 20,
     },
