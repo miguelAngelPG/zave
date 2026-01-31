@@ -1,46 +1,76 @@
-import { View } from "@/components/ui/view";
-import { useColor } from "@/hooks/useColor";
-import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
-import { ActivitySection } from "@/src/components/organisms/ActivitySection/ActivitySection";
-import { AiChatModal } from "@/src/components/organisms/AiChatModal/AiChatModal";
-import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
-import { HeaderSection } from "@/src/components/organisms/HeaderSection/HeaderSection";
-import { QuickActions } from "@/src/components/organisms/QuickActions/QuickActions";
-import { LinearGradient } from "expo-linear-gradient";
+import { useColor } from '@/hooks/useColor';
+import { AccountsSection } from '@/src/components/organisms/AccountsSection/AccountsSection';
+import { AiChatModal } from '@/src/components/organisms/AiChatModal/AiChatModal';
+import { BalanceSection } from '@/src/components/organisms/BalanceSection/BalanceSection';
+import { HeaderSection } from '@/src/components/organisms/HeaderSection/HeaderSection';
+import { TransactionList } from '@/src/components/organisms/TransactionList/TransactionList';
+import { useScrollContext } from '@/src/context/ScrollContext';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const backgroundColor = useColor('background');
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatVisible, setChatVisible] = useState(false);
+  const { scrollY, isScrolling } = useScrollContext();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      'worklet';
+      scrollY.value = event.contentOffset.y;
+    },
+    onBeginDrag: (e: any) => {
+      'worklet';
+      isScrolling.value = true;
+    },
+    onEndDrag: (e: any) => {
+      'worklet';
+      isScrolling.value = false;
+    },
+    onMomentumBegin: (e: any) => {
+      'worklet';
+      isScrolling.value = true;
+    },
+    onMomentumEnd: (e: any) => {
+      'worklet';
+      isScrolling.value = false;
+    },
+  });
 
   return (
-    <View style={{ flex: 1, backgroundColor }}>
-      {/* Background Gradient */}
-      <LinearGradient
-        colors={['rgba(37, 99, 235, 0.05)', 'transparent', 'rgba(124, 58, 237, 0.05)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-      />
+    <View style={[styles.container, { backgroundColor }]}>
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        contentContainerStyle={{
+          paddingTop: insets.top + 10,
+          paddingBottom: 110,
+          paddingHorizontal: 24,
+          gap: 32,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <HeaderSection />
 
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 24, paddingBottom: 110, gap: 36 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <HeaderSection />
-          <BalanceSection />
-          <QuickActions />
-          <AccountsSection />
-          <ActivitySection />
-        </ScrollView>
-      </SafeAreaView>
+        {/* Balance Section (Dark/Glass) */}
+        <BalanceSection />
 
-      <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
+        {/* Accounts Carousel */}
+        <AccountsSection />
+
+        {/* Recent Transactions */}
+        <TransactionList />
+      </Animated.ScrollView>
+
+      <AiChatModal visible={isChatVisible} onClose={() => setChatVisible(false)} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

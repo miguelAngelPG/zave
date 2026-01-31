@@ -1,8 +1,9 @@
 import { useColor } from '@/hooks/useColor';
+import { useScrollContext } from '@/src/context/ScrollContext';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Dimensions } from 'react-native';
-import { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import { useAnimatedStyle, useDerivedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -13,6 +14,7 @@ type AiMode = 'closed' | 'menu' | 'voice';
 
 export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () => void) => {
     const insets = useSafeAreaInsets();
+    const { scrollY, isScrolling } = useScrollContext(); // Global scroll value & state
     const cardColor = useColor('card');
     const primaryColor = useColor('primary');
     const inactiveColor = useColor('muted');
@@ -24,8 +26,12 @@ export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () =>
 
     // Actions
     const handlePress = (route: string, isFocused: boolean) => {
+        if (isExpanded) {
+            setAiMode('closed');
+            return; // Don't navigate if just closing menu
+        }
+
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        if (isExpanded) setAiMode('closed');
 
         const event = navigation.emit({
             type: 'tabPress',
@@ -57,13 +63,27 @@ export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () =>
         onChatPress?.();
     };
 
+    // Derived Values
+    // Detect "Bounce Compact Mode": 
+    // - Shrinks ONLY when actively scrolling down (>20px).
+    // - Bounces back to normal automatically when scrolling stops (isScrolling -> false).
+    const isCompact = useDerivedValue(() => {
+        return !isExpanded && scrollY.value > 20 && isScrolling.value;
+    });
+
     // Animations
     const containerStyle = useAnimatedStyle(() => {
-        const targetWidth = isExpanded ? Math.min(width - 40, MAX_WIDTH) : 240;
+        // Normal width logic
+        const expandedWidth = Math.min(width - 40, MAX_WIDTH);
+        const normalWidth = 240;
+
+        // If compact, shrink to a small pill (70px) surrounding only the AI button
+        const targetWidth = isExpanded ? expandedWidth : (isCompact.value ? 70 : normalWidth);
+
         return {
             width: withSpring(targetWidth, SPRING_CONFIG),
-            height: withSpring(isExpanded ? expandedHeight : 65, SPRING_CONFIG),
-            borderRadius: withSpring(isExpanded ? 36 : 32.5, SPRING_CONFIG),
+            height: withSpring(isExpanded ? expandedHeight : (isCompact.value ? 60 : 65), SPRING_CONFIG),
+            borderRadius: withSpring(isExpanded ? 36 : (isCompact.value ? 30 : 32.5), SPRING_CONFIG),
             transform: [
                 { translateY: withSpring(isExpanded ? -10 : 0, SPRING_CONFIG) }
             ]
@@ -71,9 +91,13 @@ export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () =>
     });
 
     const navIconsStyle = useAnimatedStyle(() => {
+        // Hide icons when expanded OR when compact (morphed into pill)
+        const hideIcons = isExpanded || isCompact.value;
         return {
-            opacity: withTiming(isExpanded ? 0 : 1, { duration: 150 }),
-            transform: [{ scale: withTiming(isExpanded ? 0.5 : 1, { duration: 150 }) }]
+            opacity: withTiming(hideIcons ? 0 : 1, { duration: 150 }),
+            transform: [
+                { scale: withTiming(hideIcons ? 0 : 1, { duration: 150 }) }
+            ]
         };
     });
 

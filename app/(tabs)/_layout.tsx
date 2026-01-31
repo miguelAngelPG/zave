@@ -1,60 +1,57 @@
-import { AiChatModal } from '@/src/components/organisms/AiChatModal/AiChatModal';
-import { LiquidTabBar } from '@/src/components/organisms/BottomTabBar/LiquidTabBar';
 import { Tabs } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import React from 'react';
+import { Platform } from 'react-native';
+
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import TabBarBackground from '@/components/ui/TabBarBackground';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { BottomTabBar } from '@/src/components/organisms/BottomTabBar/BottomTabBar';
+import { ScrollProvider } from '@/src/context/ScrollContext';
 
 export default function TabLayout() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const colorScheme = useColorScheme();
 
   return (
-    <>
+    <ScrollProvider>
       <Tabs
-        tabBar={(props) => (
-          <LiquidTabBar
-            {...props}
-            onChatPress={() => setIsChatOpen(true)}
-          />
-        )}
+        tabBar={(props) => <BottomTabBar {...props} />}
         screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerShown: false,
+          tabBarBackground: TabBarBackground,
+          tabBarStyle: Platform.select({
+            ios: {
+              // Use a transparent background on iOS to show the blur effect
+              position: 'absolute',
+            },
+            default: {},
+          }),
         }}>
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Inicio',
+            title: 'Home',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Explore',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
           }}
         />
         <Tabs.Screen
           name="accounts"
           options={{
-            title: 'Cuentas',
-          }}
-        />
-        <Tabs.Screen
-          name="analytics"
-          options={{
-            title: 'Análisis',
-          }}
-        />
-        <Tabs.Screen
-          name="goals"
-          options={{
-            title: 'Metas',
-          }}
-        />
-        <Tabs.Screen
-          name="payments"
-          options={{
-            title: 'Pagos',
+            title: 'Accounts',
+            // Using a dummy component here is fine as the custom tab bar overrides it, 
+            // but for completeness we can leave it or remove if unused by custom bar logic directly
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
           }}
         />
       </Tabs>
-
-      {/* Global AI Chat Modal */}
-      <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
-    </>
+    </ScrollProvider>
   );
 }
-
-const styles = StyleSheet.create({});
