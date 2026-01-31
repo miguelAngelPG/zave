@@ -2,16 +2,18 @@ import { View } from "@/components/ui/view";
 import { useColor } from "@/hooks/useColor";
 import { AccountsSection } from "@/src/components/organisms/AccountsSection/AccountsSection";
 import { ActivitySection } from "@/src/components/organisms/ActivitySection/ActivitySection";
+import { AiChatModal } from "@/src/components/organisms/AiChatModal/AiChatModal";
 import { BalanceSection } from "@/src/components/organisms/BalanceSection/BalanceSection";
 import { HeaderSection } from "@/src/components/organisms/HeaderSection/HeaderSection";
 import { QuickActions } from "@/src/components/organisms/QuickActions/QuickActions";
 import { LinearGradient } from "expo-linear-gradient";
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const backgroundColor = useColor('background');
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
     <View style={{ flex: 1, backgroundColor }}>
@@ -30,13 +32,15 @@ export default function HomeScreen() {
           contentContainerStyle={{ padding: 24, paddingBottom: 110, gap: 36 }}
           showsVerticalScrollIndicator={false}
         >
-          <HeaderSection />
+          <HeaderSection onAvatarPress={() => setIsChatOpen(true)} />
           <BalanceSection />
           <QuickActions />
           <AccountsSection />
           <ActivitySection />
         </ScrollView>
       </SafeAreaView>
+
+      <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </View>
   );
 }

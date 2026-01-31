@@ -108,6 +108,7 @@ export const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
                     const onPress = () => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
                         const event = navigation.emit({
                             type: 'tabPress',
                             target: route.key,

@@ -1,15 +1,21 @@
-import { CustomTabBar } from '@/src/components/organisms/BottomTabBar/BottomTabBar';
-import { SpeedDial } from '@/src/components/organisms/SpeedDial/SpeedDial';
+import { AiChatModal } from '@/src/components/organisms/AiChatModal/AiChatModal';
+import { LiquidTabBar } from '@/src/components/organisms/BottomTabBar/LiquidTabBar';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 export default function TabLayout() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
     <>
       <Tabs
-        tabBar={(props) => <CustomTabBar {...props} />}
+        tabBar={(props) => (
+          <LiquidTabBar
+            {...props}
+            onChatPress={() => setIsChatOpen(true)}
+          />
+        )}
         screenOptions={{
           headerShown: false,
         }}>
@@ -44,31 +50,11 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      <SpeedDial />
+
+      {/* Global AI Chat Modal */}
+      <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#1F2937',
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    minHeight: 60,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: '400',
-    marginTop: 4,
-    textAlign: 'center',
-  },
-});
+const styles = StyleSheet.create({});
