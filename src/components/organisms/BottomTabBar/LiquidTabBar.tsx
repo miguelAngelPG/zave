@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Camera, CreditCard, House, Keyboard, MessageSquare, Mic, Sparkles, X } from 'lucide-react-native';
+import { Camera, CreditCard, House, Keyboard, MessageSquare, Mic, PieChart, Sparkles, Target, X } from 'lucide-react-native';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, LinearTransition, ZoomIn } from 'react-native-reanimated';
@@ -46,14 +46,34 @@ export const LiquidTabBar = (props: any) => {
                         />
                     </Animated.View>
 
-                    <View style={{ width: 60 }} />
-
                     <Animated.View style={[styles.iconWrapper, navIconsStyle]}>
                         <TabIcon
                             icon={CreditCard}
                             isFocused={state.index === 1}
                             color={state.index === 1 ? primaryColor : inactiveColor}
                             onPress={() => handlePress('accounts', state.index === 1)}
+                            disabled={isExpanded}
+                        />
+                    </Animated.View>
+
+                    <View style={{ width: 44 }} />
+
+                    <Animated.View style={[styles.iconWrapper, navIconsStyle]}>
+                        <TabIcon
+                            icon={PieChart}
+                            isFocused={state.index === 2}
+                            color={state.index === 2 ? primaryColor : inactiveColor}
+                            onPress={() => handlePress('analytics', state.index === 2)}
+                            disabled={isExpanded}
+                        />
+                    </Animated.View>
+
+                    <Animated.View style={[styles.iconWrapper, navIconsStyle]}>
+                        <TabIcon
+                            icon={Target}
+                            isFocused={state.index === 3}
+                            color={state.index === 3 ? primaryColor : inactiveColor}
+                            onPress={() => handlePress('goals', state.index === 3)}
                             disabled={isExpanded}
                         />
                     </Animated.View>

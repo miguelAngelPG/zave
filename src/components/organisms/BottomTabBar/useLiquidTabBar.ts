@@ -95,7 +95,7 @@ export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () =>
     const containerStyle = useAnimatedStyle(() => {
         // Normal width logic
         const expandedWidth = Math.min(width - 40, MAX_WIDTH);
-        const normalWidth = 240;
+        const normalWidth = 330;
 
         // If compact, shrink to a perfect Circle (66px) that matches the vertical framing
         // The button is 52px + 7px bottom margin. A 66px height centers it (7px top margin).

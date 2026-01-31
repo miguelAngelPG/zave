@@ -21,13 +21,13 @@ export const styles = StyleSheet.create({
     },
     navRow: {
         flexDirection: 'row',
-        width: 240, // Fixed width to prevent layout collapse when parent shrinks
+        width: 330, // Fixed width to prevent layout collapse when parent shrinks
         left: '50%',
-        marginLeft: -120, // Center it absolutely
+        marginLeft: -165, // Center it absolutely
         height: 65,
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         position: 'absolute',
         bottom: 0,
     },

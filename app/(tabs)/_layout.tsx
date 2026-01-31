@@ -36,19 +36,24 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="explore"
-          options={{
-            title: 'Explore',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
           name="accounts"
           options={{
             title: 'Accounts',
-            // Using a dummy component here is fine as the custom tab bar overrides it, 
-            // but for completeness we can leave it or remove if unused by custom bar logic directly
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="analytics"
+          options={{
+            title: 'Analytics',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.pie.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="goals"
+          options={{
+            title: 'Goals',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="target" color={color} />,
           }}
         />
       </Tabs>
