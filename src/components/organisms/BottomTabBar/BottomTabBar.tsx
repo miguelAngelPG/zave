@@ -1,85 +1,113 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useColor } from '@/hooks/useColor';
+import * as Haptics from 'expo-haptics';
+import { Calendar, ChartPie, CreditCard, Flag, House } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// import { FAB } from '../../atoms/FAB/FAB';
 
-// export const BottomTabBar: React.FC<BottomTabBarProps> = ({
-//   activeTab,
-//   onTabPress,
-//   hasFAB = true
-// }) => {
-//   const tabs: TabName[] = ['Inicio', 'Cuentas', 'Analisis', 'Metas', 'Pagos'];
+const { width } = Dimensions.get('window');
 
-//   const handleFABPress = () => {
-//     console.log('FAB pressed - Open transaction input');
-//     // Aquí abres el modal/screen para agregar transacción
-//   };
+const TabItem = ({
+    isFocused,
+    routeName,
+    onPress,
+    activeContentColor,
+    inactiveColor,
+    primaryColor
+}: any) => {
+    const animation = useSharedValue(0);
 
-//   return (
-//     <>
-//       {/* FAB */}
-//       {hasFAB && <FAB onPress={handleFABPress} />}
+    useEffect(() => {
+        animation.value = withSpring(isFocused ? 1 : 0, {
+            damping: 15,
+            stiffness: 150,
+        });
+    }, [isFocused]);
 
-//       {/* Tab Bar */}
-//       <SafeAreaView style={styles.safeArea}>
-//         <View style={styles.container}>
-//           <View style={styles.tabsContainer}>
-//             {tabs.map((tab) => (
-//               <TabItem
-//                 key={tab}
-//                 name={tab}
-//                 isActive={activeTab === tab}
-//                 onPress={() => onTabPress(tab)}
-//               />
-//             ))}
-//           </View>
-//         </View>
-//       </SafeAreaView>
-//     </>
-//   );
-// };
+    const pillStyle = useAnimatedStyle(() => {
+        return {
+            opacity: animation.value,
+            transform: [{ scale: animation.value }],
+        };
+    });
 
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     backgroundColor: '#1F2937',
-//   },
-//   container: {
-//     backgroundColor: '#1F2937',
-//     borderTopWidth: 1,
-//     borderTopColor: '#374151',
-//   },
-//   tabsContainer: {
-//     flexDirection: 'row',
-//     paddingHorizontal: spacing.md,
-//     paddingVertical: spacing.xs,
-//     minHeight: 60,
-//   },
-// });
+    const iconContainerStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                { scale: interpolate(animation.value, [0, 1], [1, 1.1]) },
+            ],
+        };
+    });
+
+    // Get icon component
+    const IconComponent = () => {
+        const iconProps = {
+            size: 24,
+            color: isFocused ? activeContentColor : inactiveColor,
+            strokeWidth: isFocused ? 2.5 : 2
+        };
+
+        switch (routeName) {
+            case 'index': return <House {...iconProps} />;
+            case 'accounts': return <CreditCard {...iconProps} />;
+            case 'analytics': return <ChartPie {...iconProps} />;
+            case 'goals': return <Flag {...iconProps} />;
+            case 'payments': return <Calendar {...iconProps} />;
+            default: return <House {...iconProps} />;
+        }
+    };
+
+    return (
+        <TouchableOpacity
+            style={styles.tabItem}
+            onPress={onPress}
+            activeOpacity={1}
+        >
+            <Animated.View
+                style={[
+                    styles.activePill,
+                    { backgroundColor: primaryColor },
+                    pillStyle
+                ]}
+            />
+            <Animated.View style={[styles.contentContainer, iconContainerStyle]}>
+                <IconComponent />
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
 
 export const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     const insets = useSafeAreaInsets();
 
-    //     const handleFABPress = () => {
-    //     console.log('FAB pressed - Open transaction input');
-    //     // Aquí abres el modal/screen para agregar transacción
-    //   };
+    // Theme colors
+    const cardColor = useColor('card');
+    const inactiveColor = useColor('muted');
+    const primaryColor = useColor('primary');
+    const activeContentColor = useColor('primaryForeground');
 
     return (
-        <>
-            {/* <FAB onPress={handleFABPress} /> */}
-            <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
+        <View pointerEvents="box-none" style={styles.container}>
+            <View style={[
+                styles.tabBar,
+                {
+                    backgroundColor: cardColor,
+                    marginBottom: insets.bottom + 20,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 5,
+                    borderWidth: 0.5,
+                    borderColor: 'rgba(0,0,0,0.05)',
+                }
+            ]}>
                 {state.routes.map((route: any, index: number) => {
-                    const { options } = descriptors[route.key];
-                    const label = options.tabBarLabel !== undefined
-                        ? options.tabBarLabel
-                        : options.title !== undefined
-                            ? options.title
-                            : route.name;
-
                     const isFocused = state.index === index;
 
                     const onPress = () => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         const event = navigation.emit({
                             type: 'tabPress',
                             target: route.key,
@@ -91,92 +119,55 @@ export const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                         }
                     };
 
-                    // Get icon name
-                    const getIconName = (routeName: string): keyof typeof Ionicons.glyphMap => {
-                        switch (routeName) {
-                            case 'index': return 'home-outline';
-                            case 'accounts': return 'card-outline';
-                            case 'analytics': return 'pie-chart-outline';
-                            case 'goals': return 'flag-outline';
-                            case 'payments': return 'calendar-outline';
-                            default: return 'home-outline';
-                        }
-                    };
-
-                    // Get display name
-                    const getDisplayName = (routeName: string) => {
-                        switch (routeName) {
-                            case 'index': return 'Inicio';
-                            case 'accounts': return 'Cuentas';
-                            case 'analytics': return 'Análisis';
-                            case 'goals': return 'Metas';
-                            case 'payments': return 'Pagos';
-                            default: return routeName;
-                        }
-                    };
-
                     return (
-                        <TouchableOpacity
+                        <TabItem
                             key={route.key}
-                            style={styles.tabItem}
+                            isFocused={isFocused}
+                            routeName={route.name}
                             onPress={onPress}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons
-                                name={getIconName(route.name)}
-                                size={20}
-                                color={isFocused ? '#FFFFFF' : '#6B7280'}
-                            />
-                            <Text style={[
-                                styles.tabLabel,
-                                { color: isFocused ? '#FFFFFF' : '#6B7280' }
-                            ]}>
-                                {getDisplayName(route.name)}
-                            </Text>
-                        </TouchableOpacity>
+                            activeContentColor={activeContentColor}
+                            inactiveColor={inactiveColor}
+                            primaryColor={primaryColor}
+                        />
                     );
                 })}
             </View>
-        </>
+        </View>
     );
 };
+
 const styles = StyleSheet.create({
+    container: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
     tabBar: {
         flexDirection: 'row',
-        backgroundColor: '#1F2937',
-        borderTopWidth: 1,
-        borderTopColor: '#374151',
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        minHeight: 60,
+        width: width - 60,
+        borderRadius: 35,
+        height: 65,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 6,
     },
     tabItem: {
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 8,
     },
-    tabLabel: {
-        fontSize: 12,
-        fontWeight: '400',
-        marginTop: 4,
-        textAlign: 'center',
-    },
-    fab: {
+    activePill: {
         position: 'absolute',
-        bottom: 80,
-        right: 24,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#8B5CF6',
-        justifyContent: 'center',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+    },
+    contentContainer: {
         alignItems: 'center',
-        shadowColor: '#8B5CF6',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
-        zIndex: 1000,
+        justifyContent: 'center',
+        zIndex: 10,
     },
 });
