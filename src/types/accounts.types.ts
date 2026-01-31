@@ -6,6 +6,7 @@ export interface AccountData {
   dueInfo?: string;
   urgencyLevel: 'urgent' | 'warning' | 'normal';
   backgroundColor: string;
+  gradient?: readonly [string, string];
   iconColor: string;
 }
 

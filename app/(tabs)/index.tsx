@@ -32,7 +32,7 @@ export default function HomeScreen() {
           contentContainerStyle={{ padding: 24, paddingBottom: 110, gap: 36 }}
           showsVerticalScrollIndicator={false}
         >
-          <HeaderSection onAvatarPress={() => setIsChatOpen(true)} />
+          <HeaderSection />
           <BalanceSection />
           <QuickActions />
           <AccountsSection />
