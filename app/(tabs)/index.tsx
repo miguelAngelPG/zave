@@ -21,22 +21,17 @@ export default function HomeScreen() {
       'worklet';
       scrollY.value = event.contentOffset.y;
     },
-    onBeginDrag: (e: any) => {
-      'worklet';
-      isScrolling.value = true;
-    },
-    onEndDrag: (e: any) => {
-      'worklet';
-      isScrolling.value = false;
-    },
-    onMomentumBegin: (e: any) => {
-      'worklet';
-      isScrolling.value = true;
-    },
-    onMomentumEnd: (e: any) => {
-      'worklet';
-      isScrolling.value = false;
-    },
+    // Reanimated Short Names
+    onBeginDrag: (e: any) => { 'worklet'; isScrolling.value = true; },
+    onEndDrag: (e: any) => { 'worklet'; isScrolling.value = false; },
+    onMomentumBegin: (e: any) => { 'worklet'; isScrolling.value = true; },
+    onMomentumEnd: (e: any) => { 'worklet'; isScrolling.value = false; },
+
+    // Standard RN Names (Fallback for compatibility)
+    // onScrollBeginDrag: (e: any) => { 'worklet'; isScrolling.value = true; },
+    // onScrollEndDrag: (e: any) => { 'worklet'; isScrolling.value = false; },
+    // onMomentumScrollBegin: (e: any) => { 'worklet'; isScrolling.value = true; },
+    // onMomentumScrollEnd: (e: any) => { 'worklet'; isScrolling.value = false; },
   });
 
   return (

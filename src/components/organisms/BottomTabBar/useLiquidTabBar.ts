@@ -7,7 +7,8 @@ import { useAnimatedStyle, useDerivedValue, withSpring, withTiming } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
-const SPRING_CONFIG = { damping: 15, stiffness: 120, mass: 0.6 };
+// Tuned for a "Solid Premium" feel (less bounce, more control)
+const SPRING_CONFIG = { damping: 20, stiffness: 180, mass: 0.8 };
 const MAX_WIDTH = 360;
 
 type AiMode = 'closed' | 'menu' | 'voice';
@@ -94,9 +95,9 @@ export const useLiquidTabBar = (state: any, navigation: any, onChatPress?: () =>
         // Hide icons when expanded OR when compact (morphed into pill)
         const hideIcons = isExpanded || isCompact.value;
         return {
-            opacity: withTiming(hideIcons ? 0 : 1, { duration: 150 }),
+            opacity: withTiming(hideIcons ? 0 : 1, { duration: 100 }), // Faster fade out
             transform: [
-                { scale: withTiming(hideIcons ? 0 : 1, { duration: 150 }) }
+                { scale: withTiming(hideIcons ? 0 : 1, { duration: 100 }) }
             ]
         };
     });

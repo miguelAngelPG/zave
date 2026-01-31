@@ -31,7 +31,7 @@ export const LiquidTabBar = (props: any) => {
     return (
         <View pointerEvents="box-none" style={styles.container}>
             <Animated.View
-                layout={LinearTransition.springify().damping(18)}
+                // Removed layout prop to avoid conflict with containerStyle width/height animations
                 style={[styles.dock, dockStyle]}
             >
                 {/* NAVIGATION ROW */}
