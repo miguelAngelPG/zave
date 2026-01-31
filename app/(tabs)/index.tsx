@@ -2,6 +2,7 @@ import { useColor } from '@/hooks/useColor';
 import { AccountsSection } from '@/src/components/organisms/AccountsSection/AccountsSection';
 import { AiChatModal } from '@/src/components/organisms/AiChatModal/AiChatModal';
 import { BalanceSection } from '@/src/components/organisms/BalanceSection/BalanceSection';
+import { GoalsSection } from '@/src/components/organisms/GoalsSection/GoalsSection';
 import { HeaderSection } from '@/src/components/organisms/HeaderSection/HeaderSection';
 import { TransactionList } from '@/src/components/organisms/TransactionList/TransactionList';
 import { useScrollContext } from '@/src/context/ScrollContext';
@@ -26,12 +27,6 @@ export default function HomeScreen() {
     onEndDrag: (e: any) => { 'worklet'; isScrolling.value = false; },
     onMomentumBegin: (e: any) => { 'worklet'; isScrolling.value = true; },
     onMomentumEnd: (e: any) => { 'worklet'; isScrolling.value = false; },
-
-    // Standard RN Names (Fallback for compatibility)
-    // onScrollBeginDrag: (e: any) => { 'worklet'; isScrolling.value = true; },
-    // onScrollEndDrag: (e: any) => { 'worklet'; isScrolling.value = false; },
-    // onMomentumScrollBegin: (e: any) => { 'worklet'; isScrolling.value = true; },
-    // onMomentumScrollEnd: (e: any) => { 'worklet'; isScrolling.value = false; },
   });
 
   return (
@@ -54,6 +49,9 @@ export default function HomeScreen() {
 
         {/* Accounts Carousel */}
         <AccountsSection />
+
+        {/* Goals Progress */}
+        <GoalsSection />
 
         {/* Recent Transactions */}
         <TransactionList />
