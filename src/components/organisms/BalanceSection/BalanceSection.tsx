@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { LinearGradient } from "expo-linear-gradient";
-import { Activity, ChevronDown, Lock, Wallet } from "lucide-react-native";
+import { Activity, ChevronDown, Lock, Sparkles, Wallet } from "lucide-react-native";
 import React, { useState } from 'react';
 import { Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
@@ -9,7 +9,7 @@ import { PHYSICS } from "../../../theme/animations";
 
 // Calculated heights for manual animation control (Like LiquidTabBar)
 const IDLE_HEIGHT = 110;
-const EXPANDED_HEIGHT = 300;
+const EXPANDED_HEIGHT = 350;
 
 export const BalanceSection = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,14 +21,14 @@ export const BalanceSection = () => {
   // 1. Manual Height Animation (Exactly like LiquidTabBar)
   const containerStyle = useAnimatedStyle(() => {
     return {
-      height: withSpring(isExpanded ? EXPANDED_HEIGHT : IDLE_HEIGHT, PHYSICS.JELLY),
+      height: withSpring(isExpanded ? EXPANDED_HEIGHT : IDLE_HEIGHT, PHYSICS.FLUID),
     };
   });
 
   // 2. Chevron Rotation
   const chevronStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ rotate: withSpring(isExpanded ? '180deg' : '0deg', PHYSICS.JELLY) }],
+      transform: [{ rotate: withSpring(isExpanded ? '180deg' : '0deg', PHYSICS.FLUID) }],
     };
   });
 
@@ -100,37 +100,60 @@ export const BalanceSection = () => {
             </Animated.View>
           </View>
 
-          {/* EXPANDED CONTENT (Absolute-like positioning or just flow) */}
+          {/* EXPANDED CONTENT */}
           <Animated.View style={[{ marginTop: 30, gap: 16 }, expandedContentStyle]}>
 
             {/* Divider */}
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: 4 }} />
 
             {/* Breakdown */}
-            <View style={{ gap: 16 }}>
+            <View style={{ gap: 20 }}>
+              {/* Assets */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Wallet size={14} color="#94a3b8" />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ backgroundColor: 'rgba(148, 163, 184, 0.1)', padding: 6, borderRadius: 8 }}>
+                    <Wallet size={14} color="#94a3b8" />
+                  </View>
                   <Text style={{ color: '#94a3b8', fontSize: 13, fontWeight: '500' }}>Total Assets</Text>
                 </View>
                 <Text style={{ color: 'white', fontSize: 14, fontWeight: '700' }}>$12,504</Text>
               </View>
 
+              {/* Comprometido (Smart Context Integration) */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Lock size={14} color="#f43f5e" />
-                  <Text style={{ color: '#f43f5e', fontSize: 13, fontWeight: '500' }}>Comprometido</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ backgroundColor: 'rgba(244, 63, 94, 0.1)', padding: 6, borderRadius: 8 }}>
+                    <Lock size={14} color="#f43f5e" />
+                  </View>
+                  <View>
+                    <Text style={{ color: '#f43f5e', fontSize: 13, fontWeight: '500' }}>Comprometido</Text>
+                    <Text style={{ color: '#f43f5e', fontSize: 10, opacity: 0.8, marginTop: 2 }}>Incl. Renta y Servicios</Text>
+                  </View>
                 </View>
                 <Text style={{ color: '#f43f5e', fontSize: 14, fontWeight: '700' }}>- $8,200</Text>
               </View>
 
+              {/* Daily */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ color: '#cbd5e1', fontSize: 13, fontWeight: '500' }}>Diario Restante</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ color: '#4ade80', fontSize: 14, fontWeight: '700' }}>$30.00</Text>
-                  <Activity size={12} color="#4ade80" />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.1)', padding: 6, borderRadius: 8 }}>
+                    <Activity size={14} color="#4ade80" />
+                  </View>
+                  <View>
+                    <Text style={{ color: '#cbd5e1', fontSize: 13, fontWeight: '500' }}>Diario Restante</Text>
+                    <Text style={{ color: '#cbd5e1', fontSize: 10, opacity: 0.6, marginTop: 2 }}>Para 12 días</Text>
+                  </View>
                 </View>
+                <Text style={{ color: '#4ade80', fontSize: 14, fontWeight: '700' }}>$30.00</Text>
               </View>
+            </View>
+
+            {/* AI Insight Footer (Integrated & Subtle) */}
+            <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', flexDirection: 'row', gap: 10 }}>
+              <Sparkles size={16} color="#fbbf24" style={{ marginTop: 2, opacity: 0.8 }} />
+              <Text style={{ color: '#94a3b8', fontSize: 12, lineHeight: 18, flex: 1 }}>
+                Tu saldo real es positivo. Tienes cubiertos todos tus gastos fijos del mes.
+              </Text>
             </View>
 
           </Animated.View>
