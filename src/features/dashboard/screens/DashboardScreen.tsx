@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import { Text } from '../../../components/atoms/Text/Text';
 import { AlertCard } from '../../../components/molecules/AlertCard/AlertCard';
-import { BalanceCard } from '../../../components/molecules/BalanceCard/BalanceCard';
 import { QuickAction } from '../../../components/molecules/QuickAction/QuickAction';
+import { BalanceSection } from '../../../components/organisms/BalanceSection/BalanceSection';
 import { colors, spacing } from '../../../theme';
 import { TransactionItem } from '../components/TransactionItem';
 
@@ -18,7 +18,9 @@ const mockData = {
   balance: 45230.50,
   monthlyChange: 2340,
   income: 15000,
+
   expenses: 12660,
+  pendingFixedExpenses: 12500, // Mock for Real Balance calculation
   alerts: [
     {
       id: '1',
@@ -90,7 +92,7 @@ export const DashboardScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* <StatusBar style="dark" /> */}
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
@@ -104,16 +106,14 @@ export const DashboardScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
-        {/* Balance Card */}
-        <BalanceCard
-          balance={mockData.balance}
-          monthlyChange={mockData.monthlyChange}
-          income={mockData.income}
-          expenses={mockData.expenses}
+        {/* Balance Section */}
+        <BalanceSection
+          totalBalance={mockData.balance}
+          pendingFixedExpenses={mockData.pendingFixedExpenses}
         />
 
         {/* Quick Actions */}
@@ -173,7 +173,7 @@ export const DashboardScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           {mockData.recentTransactions.map((transaction) => (
             <TransactionItem
               key={transaction.id}

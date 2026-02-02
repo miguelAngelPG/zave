@@ -1,184 +1,345 @@
-import { Text } from "@/components/ui/text";
-import { View } from "@/components/ui/view";
-import { LinearGradient } from "expo-linear-gradient";
-import { CheckCircle, ChevronDown, Lock, Wallet } from "lucide-react-native";
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
-import { PHYSICS } from "../../../theme/animations";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Carousel from 'react-native-reanimated-carousel';
+import { colors, spacing, typography } from '../../../theme';
+import { Text } from '../../atoms/Text/Text';
 
-// Calculated heights for manual animation control (Like LiquidTabBar)
-const IDLE_HEIGHT = 110;
+interface BalanceSectionProps {
+  totalBalance: number;
+  pendingFixedExpenses: number;
+}
 
-export const BalanceSection = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [measuredHeight, setMeasuredHeight] = useState(0);
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
+export const BalanceSection: React.FC<BalanceSectionProps> = ({
+  totalBalance = 45230.50,
+  pendingFixedExpenses = 12500.00
+}) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+  const safeToSpend = totalBalance - pendingFixedExpenses;
+
+  // Mock Data for Slides
+  const budgetLimit = 20000;
+  const budgetSpent = 8240;
+  const dailyRemaining = 450;
+
+  const formatCurrency = (amount: number, minimal: boolean = false) => {
+    if (isBalanceHidden) return '••••••';
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: minimal ? 0 : 2,
+      maximumFractionDigits: minimal ? 0 : 2,
+    }).format(amount);
   };
 
-  // 1. Manual Height Animation (Responsive to content)
-  const containerStyle = useAnimatedStyle(() => {
-    const targetHeight = isExpanded ? (IDLE_HEIGHT + measuredHeight + 50) : IDLE_HEIGHT;
-    return {
-      height: withSpring(targetHeight, PHYSICS.FLUID),
-    };
-  });
+  const togglePrivacy = () => {
+    Haptics.selectionAsync();
+    setIsBalanceHidden(!isBalanceHidden);
+  };
 
-  // 2. Chevron Rotation
-  const chevronStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: withSpring(isExpanded ? '180deg' : '0deg', PHYSICS.FLUID) }],
-    };
-  });
-
-  // 3. Opacity for Daily Context (Right side) - Hides when expanding
-  const dailyContextStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(isExpanded ? 0 : 1, { duration: 200 }),
-      transform: [{ translateX: withTiming(isExpanded ? 20 : 0, { duration: 200 }) }]
-    };
-  });
-
-  // 4. Opacity for Expanded Content - Shows when expanded
-  const expandedContentStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(isExpanded ? 1 : 0, { duration: 300 }),
-      transform: [{ translateY: withTiming(isExpanded ? 0 : 10, { duration: 300 }) }]
-    };
-  });
-
-  return (
-    <Animated.View style={[{ marginTop: 10, overflow: 'hidden', borderRadius: 24 }, containerStyle]}>
-      <Pressable onPress={toggleExpand} style={({ pressed }) => ({ flex: 1, transform: [{ scale: pressed ? 0.99 : 1 }] })}>
-        <LinearGradient
-          colors={['#0f172a', '#334155']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            flex: 1,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.1)',
-          }}
-        >
-          {/* IDLE ROW CONTENT */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-
-            {/* LEFT: Main Balance */}
-            <View style={{ gap: 4 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ color: '#94a3b8', fontSize: 12, fontWeight: '600', letterSpacing: 1 }}>DISPONIBLE</Text>
-                <Animated.View
-                  style={{
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 100,
-                    opacity: isExpanded ? 0 : 1
-                  }}
-                >
-                  <Text style={{ color: '#4ade80', fontSize: 9, fontWeight: '700' }}>LIVE</Text>
-                </Animated.View>
+  const renderItem = ({ index }: { index: number }) => {
+    return (
+      <View style={styles.slideContainer}>
+        {/* SLIDE 1: REAL BALANCE */}
+        {index === 0 && (
+          <>
+            <View style={styles.topSection}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>DISPONIBLE REAL</Text>
+                <View style={[styles.indicator, { backgroundColor: colors.warning }]} />
               </View>
-              <Text style={{ fontSize: 36, fontWeight: '800', color: 'white', letterSpacing: -1 }}>
-                $4,304
+
+              <TouchableOpacity
+                onPress={togglePrivacy}
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                style={styles.eyeIconAbsolute}
+              >
+                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
+                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                  {formatCurrency(safeToSpend)}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.subLabel}>Libre para tus gastos diarios</Text>
+            </View>
+
+            <View style={styles.separator} />
+
+            <View style={styles.footer}>
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="lock-closed-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Reservado</Text>
+                </View>
+                <Text style={styles.statValue}>{formatCurrency(pendingFixedExpenses, true)}</Text>
+              </View>
+              <View style={styles.verticalLine} />
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="wallet-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Total Cuenta</Text>
+                </View>
+                <Text style={styles.statValue}>{formatCurrency(totalBalance, true)}</Text>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* SLIDE 2: MONTHLY BUDGET */}
+        {index === 1 && (
+          <>
+            <View style={styles.topSection}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>PRESUPUESTO MENSUAL</Text>
+                <View style={[styles.indicator, { backgroundColor: colors.primary[500] }]} />
+              </View>
+
+              <TouchableOpacity
+                onPress={togglePrivacy}
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                style={styles.eyeIconAbsolute}
+              >
+                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
+                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                  {formatCurrency(budgetLimit - budgetSpent)}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.subLabel}>
+                Restante de {formatCurrency(budgetLimit, true)}
               </Text>
             </View>
 
-            {/* RIGHT: Daily Context (Absolute to prevent layout shifts) */}
-            <Animated.View style={[{ position: 'absolute', right: 0, top: 8, alignItems: 'flex-end', gap: 6 }, dailyContextStyle]}>
-              <Text style={{ color: '#cbd5e1', fontSize: 11, fontWeight: '600' }}>Diario: $120 / $150</Text>
-              <View style={{ width: 80, height: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10 }}>
-                <View style={{ width: '80%', height: '100%', backgroundColor: '#4ade80', borderRadius: 10 }} />
+            <View style={styles.separator} />
+
+            <View style={styles.footer}>
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="calendar-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Diario Sugerido</Text>
+                </View>
+                <Text style={styles.statValue}>{formatCurrency(dailyRemaining)}</Text>
               </View>
-            </Animated.View>
-
-            {/* Toggle Indicator */}
-            <Animated.View style={[{ position: 'absolute', right: 0, bottom: 0, opacity: 0.5 }, chevronStyle]}>
-              <ChevronDown size={20} color="white" />
-            </Animated.View>
-          </View>
-
-          {/* EXPANDED CONTENT (Responsive Layout Measurement) */}
-          <Animated.View
-            onLayout={(e) => setMeasuredHeight(e.nativeEvent.layout.height)}
-            style={[{ marginTop: 30, gap: 16 }, expandedContentStyle]}
-          >
-
-            {/* Breakdown */}
-            <View style={{ gap: 24 }}>
-
-              {/* 1. VISUAL CONTEXT BAR (Instant Understanding) */}
-              <View style={{ gap: 8 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 }}>COMPOSICIÓN DE TU SALDO</Text>
+              <View style={styles.verticalLine} />
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="trending-down-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Gastado</Text>
                 </View>
+                <Text style={styles.statValue}>{formatCurrency(budgetSpent, true)}</Text>
+              </View>
+            </View>
+          </>
+        )}
 
-                <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden', flexDirection: 'row' }}>
-                  {/* Red: Ocupado */}
-                  <View style={{ flex: 0.65, backgroundColor: '#f43f5e', opacity: 0.9 }} />
-                  {/* Green: Libre */}
-                  <View style={{ flex: 0.35, backgroundColor: '#4ade80' }} />
-                </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: '#f43f5e', fontSize: 10, fontWeight: '700' }}>65% YA TIENE DUEÑO ($8k)</Text>
-                  <Text style={{ color: '#4ade80', fontSize: 10, fontWeight: '700' }}>35% ES TUYO ($4k)</Text>
-                </View>
+        {/* SLIDE 3: MAIN GOAL */}
+        {index === 2 && (
+          <>
+            <View style={styles.topSection}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>META PRINCIPAL</Text>
+                <View style={[styles.indicator, { backgroundColor: '#8B5CF6' }]} />
               </View>
 
-              {/* 2. CONVERSATIONAL MATH LIST */}
-              <View style={{ gap: 16 }}>
-                {/* Row 1: The Fact */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Wallet size={16} color="#94a3b8" />
-                    <Text style={{ color: '#cbd5e1', fontSize: 14 }}>Tienes en Banco</Text>
-                  </View>
-                  <Text style={{ color: '#cbd5e1', fontSize: 14, fontWeight: '500' }}>$12,504</Text>
-                </View>
+              <TouchableOpacity
+                onPress={togglePrivacy}
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                style={styles.eyeIconAbsolute}
+              >
+                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
+              </TouchableOpacity>
 
-                {/* Row 2: The Deduction */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Lock size={16} color="#f43f5e" />
-                    <View>
-                      <Text style={{ color: '#fca5a5', fontSize: 14 }}>Menos: Pagos Fijos</Text>
-                    </View>
-                  </View>
-                  <Text style={{ color: '#fca5a5', fontSize: 14, fontWeight: '600' }}>- $8,200</Text>
-                </View>
-
-                {/* Divider */}
-                <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)' }} />
-
-                {/* Row 3: The Result */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <CheckCircle size={16} color="#4ade80" />
-                    <Text style={{ color: 'white', fontSize: 14, fontWeight: '600' }}>Te quedan Libres</Text>
-                  </View>
-                  <Text style={{ color: 'white', fontSize: 15, fontWeight: '700' }}>$4,304</Text>
-                </View>
-              </View>
-
-              {/* 3. DAILY ACTION (Highlighted) */}
-              <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.05)', borderRadius: 12, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.1)' }}>
-                <View style={{ gap: 2 }}>
-                  <Text style={{ color: '#4ade80', fontSize: 12, fontWeight: '700', letterSpacing: 0.5 }}>PRESUPUESTO PARA HOY</Text>
-                  <Text style={{ color: '#86efac', fontSize: 11 }}>($4,304 disponibles ÷ 12 días restantes)</Text>
-                </View>
-                <Text style={{ color: '#4ade80', fontSize: 18, fontWeight: '800' }}>$358</Text>
-              </View>
-
+              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
+                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                  {formatCurrency(12500)}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.subLabel}>
+                Viaje a Japón (35%)
+              </Text>
             </View>
 
-          </Animated.View>
+            <View style={styles.separator} />
 
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
+            <View style={styles.footer}>
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="flag-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Faltan</Text>
+                </View>
+                <Text style={styles.statValue}>{formatCurrency(22500, true)}</Text>
+              </View>
+              <View style={styles.verticalLine} />
+              <View style={styles.statColumn}>
+                <View style={styles.iconRow}>
+                  <Ionicons name="time-outline" size={12} color={colors.text.tertiary} />
+                  <Text style={styles.statLabel}>Fecha Meta</Text>
+                </View>
+                <Text style={styles.statValue}>Dic 2025</Text>
+              </View>
+            </View>
+          </>
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Carousel
+        loop={false}
+        width={SCREEN_WIDTH}
+        height={180} // Adjusted height based on content
+        autoPlay={false}
+        data={[0, 1, 2]}
+        scrollAnimationDuration={500}
+        onSnapToItem={(index) => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setActiveIndex(index);
+        }}
+        renderItem={renderItem}
+
+      />
+
+      {/* Pagination Dots */}
+      <View style={styles.pagination}>
+        {[0, 1, 2].map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.dot,
+              { backgroundColor: i === activeIndex ? colors.text.inverse : 'rgba(255,255,255,0.2)' }
+            ]}
+          />
+        ))}
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: 0,
+    width: '100%',
+    alignItems: 'center',
+  },
+  slideContainer: {
+    width: SCREEN_WIDTH,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  topSection: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+    width: '100%',
+    position: 'relative',
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    width: '100%', // Ensure it takes full width for strict centering
+  },
+  eyeIconAbsolute: {
+    position: 'absolute',
+    right: spacing.sm,
+    top: spacing.md,
+    zIndex: 10,
+    padding: 8,
+  },
+  label: {
+    ...typography.caption,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    fontWeight: '700',
+    color: colors.text.tertiary,
+    textTransform: 'uppercase',
+  },
+  indicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: spacing.xs,
+  },
+  bigAmount: {
+    ...typography.display,
+    color: colors.text.inverse,
+    textAlign: 'center',
+    marginVertical: 2,
+    lineHeight: 42,
+    width: '90%',
+  },
+  subLabel: {
+    ...typography.caption,
+    fontSize: 12,
+    color: colors.text.tertiary,
+    fontWeight: '400',
+    marginTop: -4,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: '50%',
+    alignSelf: 'center',
+    marginVertical: spacing.sm,
+  },
+  footer: {
+    flexDirection: 'row',
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    gap: spacing.xl,
+    width: '100%',
+  },
+  statColumn: {
+    alignItems: 'center',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+    gap: 4,
+  },
+  statLabel: {
+    ...typography.caption,
+    fontSize: 10,
+    color: colors.text.tertiary,
+  },
+  statValue: {
+    ...typography.body,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.inverse,
+  },
+  verticalLine: {
+    width: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    height: '80%',
+    alignSelf: 'center',
+    marginHorizontal: spacing.md,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 0, // Reduced top margin as the carousel has internal padding
+    gap: 6,
+    height: 10,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+});
