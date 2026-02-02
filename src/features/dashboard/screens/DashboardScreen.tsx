@@ -21,6 +21,34 @@ const mockData = {
 
   expenses: 12660,
   pendingFixedExpenses: 12500, // Mock for Real Balance calculation
+
+  // New Mock Data for Dynamic Slides
+  budget: {
+    limit: 20000,
+    spent: 8240,
+    dailyRemaining: 450,
+  },
+  mainGoal: {
+    currentAmount: 12500,
+    targetAmount: 35000,
+    deadline: 'Dic 2025',
+    name: 'Viaje a Japón',
+    percentage: 35,
+  },
+  creditCard: {
+    name: 'Nu',
+    available: 8500,
+    limit: 12000,
+    dueDate: '15 Feb',
+    daysUntilDue: 4, // Critical (<5)
+  },
+  savingsChallenge: {
+    name: 'Reto 52 Semanas',
+    currentWeek: 12,
+    totalWeeks: 52,
+    savedAmount: 3450,
+  },
+
   alerts: [
     {
       id: '1',
@@ -114,6 +142,13 @@ export const DashboardScreen: React.FC = () => {
         <BalanceSection
           totalBalance={mockData.balance}
           pendingFixedExpenses={mockData.pendingFixedExpenses}
+          // Uncomment to see filled state:
+          budget={mockData.budget}
+          mainGoal={mockData.mainGoal}
+          creditCard={mockData.creditCard}
+          savingsChallenge={mockData.savingsChallenge}
+          alerts={mockData.alerts}
+          onManageModules={() => console.log('Open Module Manager')}
         />
 
         {/* Quick Actions */}
