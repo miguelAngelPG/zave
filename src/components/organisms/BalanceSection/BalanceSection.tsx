@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { colors, spacing, typography } from '../../../theme';
 import { ProgressBar } from '../../atoms/ProgressBar/ProgressBar';
@@ -62,6 +63,24 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const safeToSpend = totalBalance - pendingFixedExpenses;
+
+  // Animation Value
+  const blurOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(blurOpacity, {
+      toValue: isBalanceHidden ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+      easing: Easing.inOut(Easing.ease),
+    }).start();
+  }, [isBalanceHidden]);
+
+  const togglePrivacy = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsBalanceHidden((prev) => !prev);
+  }, []);
+
 
   // "Intelligent" Configuration Logic
   // ------------------------------------------------
@@ -133,19 +152,15 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
   }, [budget, mainGoal, creditCard, savingsChallenge, alerts]);
 
   const formatCurrency = useCallback((amount: number, minimal: boolean = false) => {
-    if (isBalanceHidden) return '••••••';
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
       currency: 'MXN',
       minimumFractionDigits: minimal ? 0 : 2,
       maximumFractionDigits: minimal ? 0 : 2,
     }).format(amount);
-  }, [isBalanceHidden]);
-
-  const togglePrivacy = useCallback(() => {
-    Haptics.selectionAsync();
-    setIsBalanceHidden(prev => !prev);
   }, []);
+
+
 
   const renderItem = ({ item }: { item: { type: string; data: any } }) => {
     // HIGH PRIORITY ALERT SLIDE
@@ -201,10 +216,72 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
                 <View style={[styles.indicator, { backgroundColor: colors.warning }]} />
               </View>
 
-              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatCurrency(safeToSpend)}
-                </Text>
+              <TouchableOpacity activeOpacity={1} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
+                <View style={{
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  borderRadius: 16,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                  marginTop: 6,
+                  marginBottom: 2
+                }}>
+                  <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', minWidth: 120 }}>
+                    {/* 1. REAL AMOUNT (Fades Out) */}
+                    <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+                      <Text style={[styles.bigAmount, { width: 'auto', marginBottom: 0 }]} adjustsFontSizeToFit numberOfLines={1}>
+                        {formatCurrency(safeToSpend)}
+                      </Text>
+                    </Animated.View>
+
+                    {/* 2. SHADOW BLUR TEXT (Fades In) */}
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[StyleSheet.absoluteFill, {
+                        opacity: blurOpacity,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }]}
+                    >
+                      <Text
+                        style={[
+                          styles.bigAmount,
+                          {
+                            width: 'auto',
+                            marginBottom: 0,
+                            color: 'transparent',
+                            textShadowColor: 'rgba(255,255,255,0.9)',
+                            textShadowOffset: { width: 0, height: 0 },
+                            textShadowRadius: 20
+                          }
+                        ]}
+                        adjustsFontSizeToFit
+                        numberOfLines={1}
+                      >
+                        {formatCurrency(safeToSpend)}
+                      </Text>
+                    </Animated.View>
+
+                    {/* 3. GLASS OVERLAY */}
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[
+                        StyleSheet.absoluteFill,
+                        {
+                          opacity: blurOpacity,
+                          zIndex: 10,
+                          borderRadius: 16,
+                          overflow: 'hidden'
+                        }
+                      ]}
+                    >
+                      <BlurView
+                        intensity={50}
+                        tint="dark"
+                        style={StyleSheet.absoluteFill}
+                      />
+                    </Animated.View>
+                  </View>
+                </View>
               </TouchableOpacity>
               <Text style={styles.subLabel}>Libre para tus gastos diarios</Text>
             </View>
@@ -217,7 +294,37 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
                   <Ionicons name="lock-closed-outline" size={12} color={colors.text.tertiary} />
                   <Text style={styles.statLabel}>Reservado</Text>
                 </View>
-                <Text style={styles.statValue}>{formatCurrency(pendingFixedExpenses, true)}</Text>
+                <View style={{ position: 'relative', minWidth: 60, alignItems: 'center' }}>
+                  <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+                    <Text style={styles.statValue}>{formatCurrency(pendingFixedExpenses, true)}</Text>
+                  </Animated.View>
+
+                  {/* SHADOW TEXT */}
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {
+                      opacity: blurOpacity,
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }]}
+                  >
+                    <Text style={[styles.statValue, { color: 'transparent', textShadowColor: 'rgba(255,255,255,0.9)', textShadowRadius: 16 }]}>
+                      {formatCurrency(pendingFixedExpenses, true)}
+                    </Text>
+                  </Animated.View>
+
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {
+                      opacity: blurOpacity,
+                      zIndex: 10,
+                      borderRadius: 4,
+                      overflow: 'hidden'
+                    }]}
+                  >
+                    <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
+                  </Animated.View>
+                </View>
               </View>
               <View style={styles.verticalLine} />
               <View style={styles.statColumn}>
@@ -225,7 +332,37 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
                   <Ionicons name="wallet-outline" size={12} color={colors.text.tertiary} />
                   <Text style={styles.statLabel}>Total Cuenta</Text>
                 </View>
-                <Text style={styles.statValue}>{formatCurrency(totalBalance, true)}</Text>
+                <View style={{ position: 'relative', minWidth: 60, alignItems: 'center' }}>
+                  <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+                    <Text style={styles.statValue}>{formatCurrency(totalBalance, true)}</Text>
+                  </Animated.View>
+
+                  {/* SHADOW TEXT */}
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {
+                      opacity: blurOpacity,
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }]}
+                  >
+                    <Text style={[styles.statValue, { color: 'transparent', textShadowColor: 'rgba(255,255,255,0.9)', textShadowRadius: 16 }]}>
+                      {formatCurrency(totalBalance, true)}
+                    </Text>
+                  </Animated.View>
+
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, {
+                      opacity: blurOpacity,
+                      zIndex: 10,
+                      borderRadius: 4,
+                      overflow: 'hidden'
+                    }]}
+                  >
+                    <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
+                  </Animated.View>
+                </View>
               </View>
             </View>
           </>
