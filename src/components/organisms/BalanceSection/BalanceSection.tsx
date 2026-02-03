@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { colors, spacing, typography } from '../../../theme';
+import { ProgressBar } from '../../atoms/ProgressBar/ProgressBar';
 import { Text } from '../../atoms/Text/Text';
 
 export interface BalanceSectionProps {
@@ -64,72 +65,74 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
 
   // "Intelligent" Configuration Logic
   // ------------------------------------------------
-  // 1. Analyze Context
-  const isBudgetCritical = budget && (budget.limit - budget.spent) / budget.limit < 0.2; // Less than 20% left
-  const isGoalClose = mainGoal && mainGoal.percentage >= 90; // Close to achievement
-  const isCreditCardUrgent = creditCard && creditCard.daysUntilDue <= 5;
-  const criticalAlert = alerts.find(a => a.type === 'urgent');
+  const slides = useMemo(() => {
+    // 1. Analyze Context
+    const isBudgetCritical = budget && (budget.limit - budget.spent) / budget.limit < 0.2; // Less than 20% left
+    const isGoalClose = mainGoal && mainGoal.percentage >= 90; // Close to achievement
+    const isCreditCardUrgent = creditCard && creditCard.daysUntilDue <= 5;
+    const criticalAlert = alerts.find(a => a.type === 'urgent');
 
-  // 2. Assign Value/Priority
-  const rawSlides: { type: string; priority: number; data: any }[] = [
-    { type: 'balance', priority: 5, data: null }, // Default Home
-  ];
+    // 2. Assign Value/Priority
+    const rawSlides: { type: string; priority: number; data: any }[] = [
+      { type: 'balance', priority: 5, data: null }, // Default Home
+    ];
 
-  // Dynamic Injection: Critical Alert
-  if (criticalAlert) {
-    // Highest priority: User MUST see this first
-    rawSlides.push({
-      type: 'critical-alert',
-      priority: 20,
-      data: criticalAlert
-    });
-  }
+    // Dynamic Injection: Critical Alert
+    if (criticalAlert) {
+      // Highest priority: User MUST see this first
+      rawSlides.push({
+        type: 'critical-alert',
+        priority: 20,
+        data: criticalAlert
+      });
+    }
 
-  if (budget) {
-    // If critical, it becomes the MOST important slide (Priority 10)
-    // Otherwise, it sits after balance
-    rawSlides.push({
-      type: 'budget',
-      priority: isBudgetCritical ? 10 : 4,
-      data: budget
-    });
-  }
+    if (budget) {
+      // If critical, it becomes the MOST important slide (Priority 10)
+      // Otherwise, it sits after balance
+      rawSlides.push({
+        type: 'budget',
+        priority: isBudgetCritical ? 10 : 4,
+        data: budget
+      });
+    }
 
-  if (creditCard) {
-    // Credit card usually sits alongside budget
-    // If urgent payment, it jumps priority
-    rawSlides.push({
-      type: 'credit-card',
-      priority: isCreditCardUrgent ? 15 : 4.5, // Slightly higher than normal budget
-      data: creditCard
-    });
-  }
+    if (creditCard) {
+      // Credit card usually sits alongside budget
+      // If urgent payment, it jumps priority
+      rawSlides.push({
+        type: 'credit-card',
+        priority: isCreditCardUrgent ? 15 : 4.5, // Slightly higher than normal budget
+        data: creditCard
+      });
+    }
 
-  if (mainGoal) {
-    // If goal is close, prioritize it over standard budget (Priority 8)
-    rawSlides.push({
-      type: 'goal',
-      priority: isGoalClose ? 8 : 3,
-      data: mainGoal
-    });
-  }
+    if (mainGoal) {
+      // If goal is close, prioritize it over standard budget (Priority 8)
+      rawSlides.push({
+        type: 'goal',
+        priority: isGoalClose ? 8 : 3,
+        data: mainGoal
+      });
+    }
 
-  if (savingsChallenge) {
-    // Challenges are fun, but usually lower priority than bills
-    rawSlides.push({
-      type: 'savings-challenge',
-      priority: 3.5, // Between Goal and Budget
-      data: savingsChallenge
-    });
-  }
+    if (savingsChallenge) {
+      // Challenges are fun, but usually lower priority than bills
+      rawSlides.push({
+        type: 'savings-challenge',
+        priority: 3.5, // Between Goal and Budget
+        data: savingsChallenge
+      });
+    }
 
-  // Always add a "Personalize" slide at the end
-  rawSlides.push({ type: 'add-new', priority: 1, data: null });
+    // Always add a "Personalize" slide at the end
+    rawSlides.push({ type: 'add-new', priority: 1, data: null });
 
-  // 3. Sort intelligently
-  const slides = rawSlides.sort((a, b) => b.priority - a.priority);
+    // 3. Sort intelligently
+    return rawSlides.sort((a, b) => b.priority - a.priority);
+  }, [budget, mainGoal, creditCard, savingsChallenge, alerts]);
 
-  const formatCurrency = (amount: number, minimal: boolean = false) => {
+  const formatCurrency = useCallback((amount: number, minimal: boolean = false) => {
     if (isBalanceHidden) return '••••••';
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -137,12 +140,12 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
       minimumFractionDigits: minimal ? 0 : 2,
       maximumFractionDigits: minimal ? 0 : 2,
     }).format(amount);
-  };
+  }, [isBalanceHidden]);
 
-  const togglePrivacy = () => {
+  const togglePrivacy = useCallback(() => {
     Haptics.selectionAsync();
-    setIsBalanceHidden(!isBalanceHidden);
-  };
+    setIsBalanceHidden(prev => !prev);
+  }, []);
 
   const renderItem = ({ item }: { item: { type: string; data: any } }) => {
     // HIGH PRIORITY ALERT SLIDE
@@ -191,20 +194,15 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <>
             <View style={styles.topSection}>
               <View style={styles.labelContainer}>
+                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
+                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={styles.label}>DISPONIBLE REAL</Text>
                 <View style={[styles.indicator, { backgroundColor: colors.warning }]} />
               </View>
 
-              <TouchableOpacity
-                onPress={togglePrivacy}
-                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                style={styles.eyeIconAbsolute}
-              >
-                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
               <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
                   {formatCurrency(safeToSpend)}
                 </Text>
               </TouchableOpacity>
@@ -238,20 +236,27 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <>
             <View style={styles.topSection}>
               <View style={styles.labelContainer}>
+                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
+                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={styles.label}>CRÉDITO: {item.data.name}</Text>
                 <View style={[styles.indicator, { backgroundColor: '#F472B6' }]} />
               </View>
-              <TouchableOpacity onPress={togglePrivacy} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }} style={styles.eyeIconAbsolute}>
-                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
                   {formatCurrency(item.data.available)}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.subLabel}>Disponible de {formatCurrency(item.data.limit, true)}</Text>
             </View>
-            <View style={styles.separator} />
+
+            <ProgressBar
+              percentage={((item.data.limit - item.data.available) / item.data.limit) * 100}
+              colorStart="#F472B6"
+              colorEnd="#EC4899"
+              style={{ marginVertical: spacing.sm, width: '60%' }}
+            />
+
             <View style={styles.footer}>
               <View style={styles.statColumn}>
                 <View style={styles.iconRow}>
@@ -281,20 +286,27 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <>
             <View style={styles.topSection}>
               <View style={styles.labelContainer}>
+                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
+                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={styles.label}>RETO DE AHORRO</Text>
                 <View style={[styles.indicator, { backgroundColor: '#2DD4BF' }]} />
               </View>
-              <TouchableOpacity onPress={togglePrivacy} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }} style={styles.eyeIconAbsolute}>
-                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
                   {formatCurrency(item.data.savedAmount)}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.subLabel}>{item.data.name}</Text>
             </View>
-            <View style={styles.separator} />
+
+            <ProgressBar
+              percentage={(item.data.currentWeek / item.data.totalWeeks) * 100}
+              colorStart="#2DD4BF"
+              colorEnd="#14B8A6"
+              style={{ marginVertical: spacing.sm, width: '60%' }}
+            />
+
             <View style={styles.footer}>
               <View style={styles.statColumn}>
                 <View style={styles.iconRow}>
@@ -320,20 +332,15 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <>
             <View style={styles.topSection}>
               <View style={styles.labelContainer}>
+                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
+                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={styles.label}>PRESUPUESTO MENSUAL</Text>
                 <View style={[styles.indicator, { backgroundColor: colors.primary[500] }]} />
               </View>
 
-              <TouchableOpacity
-                onPress={togglePrivacy}
-                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                style={styles.eyeIconAbsolute}
-              >
-                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
               <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
                   {formatCurrency(budget.limit - budget.spent)}
                 </Text>
               </TouchableOpacity>
@@ -342,7 +349,12 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
               </Text>
             </View>
 
-            <View style={styles.separator} />
+            <ProgressBar
+              percentage={(budget.spent / budget.limit) * 100}
+              colorStart={colors.primary[500]}
+              colorEnd={colors.primary[600]}
+              style={{ marginVertical: spacing.sm, width: '60%' }}
+            />
 
             <View style={styles.footer}>
               <View style={styles.statColumn}>
@@ -369,20 +381,15 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <>
             <View style={styles.topSection}>
               <View style={styles.labelContainer}>
+                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
+                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
                 <Text style={styles.label}>META PRINCIPAL</Text>
                 <View style={[styles.indicator, { backgroundColor: '#8B5CF6' }]} />
               </View>
 
-              <TouchableOpacity
-                onPress={togglePrivacy}
-                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                style={styles.eyeIconAbsolute}
-              >
-                <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={16} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
               <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={styles.bigAmount} adjustsFontSizeToFit numberOfLines={1}>
+                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
                   {formatCurrency(mainGoal.currentAmount)}
                 </Text>
               </TouchableOpacity>
@@ -391,7 +398,12 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
               </Text>
             </View>
 
-            <View style={styles.separator} />
+            <ProgressBar
+              percentage={mainGoal.percentage}
+              colorStart="#8B5CF6"
+              colorEnd="#7C3AED"
+              style={{ marginVertical: spacing.sm, width: '60%' }}
+            />
 
             <View style={styles.footer}>
               <View style={styles.statColumn}>
@@ -416,6 +428,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
     );
   };
 
+
   return (
     <View style={styles.container}>
       <Carousel
@@ -435,15 +448,18 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
 
       {/* Pagination Dots */}
       <View style={styles.pagination}>
-        {slides.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              { backgroundColor: i === activeIndex ? colors.text.inverse : 'rgba(255,255,255,0.2)' }
-            ]}
-          />
-        ))}
+        {/* Dots Container - using a wrapper to keep strict centering independent of the absolute icon */}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {slides.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                { backgroundColor: i === activeIndex ? colors.text.inverse : 'rgba(255,255,255,0.2)' }
+              ]}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -474,13 +490,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
     width: '100%', // Ensure it takes full width for strict centering
-  },
-  eyeIconAbsolute: {
-    position: 'absolute',
-    right: spacing.sm,
-    top: spacing.md,
-    zIndex: 10,
-    padding: 8,
   },
   label: {
     ...typography.caption,
