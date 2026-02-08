@@ -1,16 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Dimensions, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
-import { colors, spacing, typography } from '../../../theme';
-import { ProgressBar } from '../../atoms/ProgressBar/ProgressBar';
-import { Text } from '../../atoms/Text/Text';
+import { spacing } from '../../../theme';
+import { styles } from './BalanceSection.styles';
+import { BalanceSlide } from './BalanceSlide';
+import { BudgetSlide } from './BudgetSlide';
+import { CreditCardSlide } from './CreditCardSlide';
+import { EmptySlide } from './EmptySlide';
+import { GoalSlide } from './GoalSlide';
+import { PaginationDots } from './PaginationDots';
+import { useBalancePrivacy } from './useBalancePrivacy';
+import { useBalanceSlides } from './useBalanceSlides';
 
 export interface BalanceSectionProps {
-  totalBalance: number;
-  pendingFixedExpenses: number;
+  totalBalance?: number;
+  pendingFixedExpenses?: number;
   budget?: {
     limit: number;
     spent: number;
@@ -51,8 +55,18 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export const BalanceSection: React.FC<BalanceSectionProps> = ({
   totalBalance = 45230.50,
   pendingFixedExpenses = 12500.00,
-  budget,
-  mainGoal,
+  budget = {
+    limit: 15000,
+    spent: 8500,
+    dailyRemaining: 325,
+  },
+  mainGoal = {
+    currentAmount: 12500,
+    targetAmount: 25000,
+    deadline: '31 Mar 2026',
+    name: 'Vacaciones',
+    percentage: 50,
+  },
   creditCard,
   savingsChallenge,
   onPressAddBudget,
@@ -61,704 +75,118 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
   alerts = [],
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+  const { isBalanceHidden, blurOpacity, togglePrivacy } = useBalancePrivacy(false);
+  const { slides } = useBalanceSlides({ budget, mainGoal, creditCard, savingsChallenge, alerts });
+
   const safeToSpend = totalBalance - pendingFixedExpenses;
 
-  // Animation Value
-  const blurOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(blurOpacity, {
-      toValue: isBalanceHidden ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-      easing: Easing.inOut(Easing.ease),
-    }).start();
-  }, [isBalanceHidden]);
-
-  const togglePrivacy = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsBalanceHidden((prev) => !prev);
+  const formatCurrency = useCallback((amount: number, compact = false): string => {
+    if (compact && amount >= 1000) {
+      return `$${(amount / 1000).toFixed(1)}k`;
+    }
+    return `$${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
 
-
-  // "Intelligent" Configuration Logic
-  // ------------------------------------------------
-  const slides = useMemo(() => {
-    // 1. Analyze Context
-    const isBudgetCritical = budget && (budget.limit - budget.spent) / budget.limit < 0.2; // Less than 20% left
-    const isGoalClose = mainGoal && mainGoal.percentage >= 90; // Close to achievement
-    const isCreditCardUrgent = creditCard && creditCard.daysUntilDue <= 5;
-    const criticalAlert = alerts.find(a => a.type === 'urgent');
-
-    // 2. Assign Value/Priority
-    const rawSlides: { type: string; priority: number; data: any }[] = [
-      { type: 'balance', priority: 5, data: null }, // Default Home
-    ];
-
-    // Dynamic Injection: Critical Alert
-    if (criticalAlert) {
-      // Highest priority: User MUST see this first
-      rawSlides.push({
-        type: 'critical-alert',
-        priority: 20,
-        data: criticalAlert
-      });
-    }
-
-    if (budget) {
-      // If critical, it becomes the MOST important slide (Priority 10)
-      // Otherwise, it sits after balance
-      rawSlides.push({
-        type: 'budget',
-        priority: isBudgetCritical ? 10 : 4,
-        data: budget
-      });
-    }
-
-    if (creditCard) {
-      // Credit card usually sits alongside budget
-      // If urgent payment, it jumps priority
-      rawSlides.push({
-        type: 'credit-card',
-        priority: isCreditCardUrgent ? 15 : 4.5, // Slightly higher than normal budget
-        data: creditCard
-      });
-    }
-
-    if (mainGoal) {
-      // If goal is close, prioritize it over standard budget (Priority 8)
-      rawSlides.push({
-        type: 'goal',
-        priority: isGoalClose ? 8 : 3,
-        data: mainGoal
-      });
-    }
-
-    if (savingsChallenge) {
-      // Challenges are fun, but usually lower priority than bills
-      rawSlides.push({
-        type: 'savings-challenge',
-        priority: 3.5, // Between Goal and Budget
-        data: savingsChallenge
-      });
-    }
-
-    // Always add a "Personalize" slide at the end
-    rawSlides.push({ type: 'add-new', priority: 1, data: null });
-
-    // 3. Sort intelligently
-    return rawSlides.sort((a, b) => b.priority - a.priority);
-  }, [budget, mainGoal, creditCard, savingsChallenge, alerts]);
-
-  const formatCurrency = useCallback((amount: number, minimal: boolean = false) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: minimal ? 0 : 2,
-      maximumFractionDigits: minimal ? 0 : 2,
-    }).format(amount);
-  }, []);
-
-
-
-  const renderItem = ({ item }: { item: { type: string; data: any } }) => {
-    // HIGH PRIORITY ALERT SLIDE
-    if (item.type === 'critical-alert') {
-      const alert = item.data;
-      return (
-        <View style={styles.slideContainer}>
-          <View style={[styles.actionSlide, styles.alertSlide]}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.2)' }]}>
-              <Ionicons name="alert-circle" size={24} color={colors.error} />
-            </View>
-            <Text style={styles.alertTitle}>{alert.title}</Text>
-            <Text style={styles.alertSubtitle}>{alert.subtitle}</Text>
-          </View>
-        </View>
-      );
-    }
-
-    // GENERIC ADD NEW MODULE (Dynamic Config Entry Point)
-    if (item.type === 'add-new') {
-      return (
-        <View style={styles.slideContainer}>
-          <TouchableOpacity
-            style={[styles.actionSlide, { borderColor: 'rgba(255,255,255,0.15)' }]}
-            onPress={onManageModules}
-            activeOpacity={0.7}
-          >
-            <View style={styles.iconCircle}>
-              <Ionicons name="apps-outline" size={24} color={colors.text.secondary} />
-            </View>
-            <Text style={[styles.actionTitle, { color: colors.text.secondary }]}>
-              Personalizar Dashboard
-            </Text>
-            <Text style={styles.actionSubtitle}>
-              Toca para agregar o quitar tarjetas
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.slideContainer}>
-        {/* SLIDE: REAL BALANCE */}
-        {item.type === 'balance' && (
-          <>
-            <View style={styles.topSection}>
-              <View style={styles.labelContainer}>
-                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
-                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
-                </TouchableOpacity>
-                <Text style={styles.label}>DISPONIBLE REAL</Text>
-                <View style={[styles.indicator, { backgroundColor: colors.warning }]} />
-              </View>
-
-              <TouchableOpacity activeOpacity={1} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <View style={{
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  borderRadius: 16,
-                  paddingVertical: 8,
-                  paddingHorizontal: 24,
-                  marginTop: 6,
-                  marginBottom: 2
-                }}>
-                  <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center', minWidth: 120 }}>
-                    {/* 1. REAL AMOUNT (Fades Out) */}
-                    <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
-                      <Text style={[styles.bigAmount, { width: 'auto', marginBottom: 0 }]} adjustsFontSizeToFit numberOfLines={1}>
-                        {formatCurrency(safeToSpend)}
-                      </Text>
-                    </Animated.View>
-
-                    {/* 2. SHADOW BLUR TEXT (Fades In) */}
-                    <Animated.View
-                      pointerEvents="none"
-                      style={[StyleSheet.absoluteFill, {
-                        opacity: blurOpacity,
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      }]}
-                    >
-                      <Text
-                        style={[
-                          styles.bigAmount,
-                          {
-                            width: 'auto',
-                            marginBottom: 0,
-                            color: 'transparent',
-                            textShadowColor: 'rgba(255,255,255,0.9)',
-                            textShadowOffset: { width: 0, height: 0 },
-                            textShadowRadius: 20
-                          }
-                        ]}
-                        adjustsFontSizeToFit
-                        numberOfLines={1}
-                      >
-                        {formatCurrency(safeToSpend)}
-                      </Text>
-                    </Animated.View>
-
-                    {/* 3. GLASS OVERLAY */}
-                    <Animated.View
-                      pointerEvents="none"
-                      style={[
-                        StyleSheet.absoluteFill,
-                        {
-                          opacity: blurOpacity,
-                          zIndex: 10,
-                          borderRadius: 16,
-                          overflow: 'hidden'
-                        }
-                      ]}
-                    >
-                      <BlurView
-                        intensity={50}
-                        tint="dark"
-                        style={StyleSheet.absoluteFill}
-                      />
-                    </Animated.View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-              <Text style={styles.subLabel}>Libre para tus gastos diarios</Text>
-            </View>
-
-            <View style={styles.separator} />
-
-            <View style={styles.footer}>
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="lock-closed-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Reservado</Text>
-                </View>
-                <View style={{ position: 'relative', minWidth: 60, alignItems: 'center' }}>
-                  <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
-                    <Text style={styles.statValue}>{formatCurrency(pendingFixedExpenses, true)}</Text>
-                  </Animated.View>
-
-                  {/* SHADOW TEXT */}
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {
-                      opacity: blurOpacity,
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }]}
-                  >
-                    <Text style={[styles.statValue, { color: 'transparent', textShadowColor: 'rgba(255,255,255,0.9)', textShadowRadius: 16 }]}>
-                      {formatCurrency(pendingFixedExpenses, true)}
-                    </Text>
-                  </Animated.View>
-
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {
-                      opacity: blurOpacity,
-                      zIndex: 10,
-                      borderRadius: 4,
-                      overflow: 'hidden'
-                    }]}
-                  >
-                    <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
-                  </Animated.View>
-                </View>
-              </View>
-              <View style={styles.verticalLine} />
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="wallet-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Total Cuenta</Text>
-                </View>
-                <View style={{ position: 'relative', minWidth: 60, alignItems: 'center' }}>
-                  <Animated.View style={{ opacity: blurOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
-                    <Text style={styles.statValue}>{formatCurrency(totalBalance, true)}</Text>
-                  </Animated.View>
-
-                  {/* SHADOW TEXT */}
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {
-                      opacity: blurOpacity,
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }]}
-                  >
-                    <Text style={[styles.statValue, { color: 'transparent', textShadowColor: 'rgba(255,255,255,0.9)', textShadowRadius: 16 }]}>
-                      {formatCurrency(totalBalance, true)}
-                    </Text>
-                  </Animated.View>
-
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, {
-                      opacity: blurOpacity,
-                      zIndex: 10,
-                      borderRadius: 4,
-                      overflow: 'hidden'
-                    }]}
-                  >
-                    <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
-                  </Animated.View>
-                </View>
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* CREDIT CARD */}
-        {item.type === 'credit-card' && (
-          <>
-            <View style={styles.topSection}>
-              <View style={styles.labelContainer}>
-                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
-                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
-                </TouchableOpacity>
-                <Text style={styles.label}>CRÉDITO: {item.data.name}</Text>
-                <View style={[styles.indicator, { backgroundColor: '#F472B6' }]} />
-              </View>
-              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatCurrency(item.data.available)}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.subLabel}>Disponible de {formatCurrency(item.data.limit, true)}</Text>
-            </View>
-
-            <ProgressBar
-              percentage={((item.data.limit - item.data.available) / item.data.limit) * 100}
-              colorStart="#F472B6"
-              colorEnd="#EC4899"
-              style={{ marginVertical: spacing.sm, width: '60%' }}
-            />
-
-            <View style={styles.footer}>
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="calendar-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Fecha Límite</Text>
-                </View>
-                <Text style={[styles.statValue, item.data.daysUntilDue <= 5 && { color: colors.error }]}>
-                  {item.data.dueDate}
-                </Text>
-              </View>
-              <View style={styles.verticalLine} />
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="time-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Vence en</Text>
-                </View>
-                <Text style={[styles.statValue, item.data.daysUntilDue <= 5 && { color: colors.error }]}>
-                  {item.data.daysUntilDue} días
-                </Text>
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* SAVINGS CHALLENGE */}
-        {item.type === 'savings-challenge' && (
-          <>
-            <View style={styles.topSection}>
-              <View style={styles.labelContainer}>
-                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
-                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
-                </TouchableOpacity>
-                <Text style={styles.label}>RETO DE AHORRO</Text>
-                <View style={[styles.indicator, { backgroundColor: '#2DD4BF' }]} />
-              </View>
-              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatCurrency(item.data.savedAmount)}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.subLabel}>{item.data.name}</Text>
-            </View>
-
-            <ProgressBar
-              percentage={(item.data.currentWeek / item.data.totalWeeks) * 100}
-              colorStart="#2DD4BF"
-              colorEnd="#14B8A6"
-              style={{ marginVertical: spacing.sm, width: '60%' }}
-            />
-
-            <View style={styles.footer}>
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="calendar-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Semana</Text>
-                </View>
-                <Text style={styles.statValue}>{item.data.currentWeek} / {item.data.totalWeeks}</Text>
-              </View>
-              <View style={styles.verticalLine} />
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="trending-up-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Progreso</Text>
-                </View>
-                <Text style={styles.statValue}>{Math.round((item.data.currentWeek / item.data.totalWeeks) * 100)}%</Text>
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* SLIDE: MONTHLY BUDGET */}
-        {item.type === 'budget' && budget && (
-          <>
-            <View style={styles.topSection}>
-              <View style={styles.labelContainer}>
-                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
-                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
-                </TouchableOpacity>
-                <Text style={styles.label}>PRESUPUESTO MENSUAL</Text>
-                <View style={[styles.indicator, { backgroundColor: colors.primary[500] }]} />
-              </View>
-
-              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatCurrency(budget.limit - budget.spent)}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.subLabel}>
-                Restante de {formatCurrency(budget.limit, true)}
-              </Text>
-            </View>
-
-            <ProgressBar
-              percentage={(budget.spent / budget.limit) * 100}
-              colorStart={colors.primary[500]}
-              colorEnd={colors.primary[600]}
-              style={{ marginVertical: spacing.sm, width: '60%' }}
-            />
-
-            <View style={styles.footer}>
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="calendar-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Diario Sugerido</Text>
-                </View>
-                <Text style={styles.statValue}>{formatCurrency(budget.dailyRemaining)}</Text>
-              </View>
-              <View style={styles.verticalLine} />
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="trending-down-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Gastado</Text>
-                </View>
-                <Text style={styles.statValue}>{formatCurrency(budget.spent, true)}</Text>
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* SLIDE: MAIN GOAL */}
-        {item.type === 'goal' && mainGoal && (
-          <>
-            <View style={styles.topSection}>
-              <View style={styles.labelContainer}>
-                <TouchableOpacity onPress={togglePrivacy} hitSlop={15} style={{ marginRight: 6 }}>
-                  <Ionicons name={isBalanceHidden ? "eye-off-outline" : "eye-outline"} size={20} color={colors.text.tertiary} />
-                </TouchableOpacity>
-                <Text style={styles.label}>META PRINCIPAL</Text>
-                <View style={[styles.indicator, { backgroundColor: '#8B5CF6' }]} />
-              </View>
-
-              <TouchableOpacity activeOpacity={0.8} onPress={togglePrivacy} style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={[styles.bigAmount, { width: 'auto' }]} adjustsFontSizeToFit numberOfLines={1}>
-                  {formatCurrency(mainGoal.currentAmount)}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.subLabel}>
-                {mainGoal.name} ({mainGoal.percentage}%)
-              </Text>
-            </View>
-
-            <ProgressBar
-              percentage={mainGoal.percentage}
-              colorStart="#8B5CF6"
-              colorEnd="#7C3AED"
-              style={{ marginVertical: spacing.sm, width: '60%' }}
-            />
-
-            <View style={styles.footer}>
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="flag-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Faltan</Text>
-                </View>
-                <Text style={styles.statValue}>{formatCurrency(mainGoal.targetAmount - mainGoal.currentAmount, true)}</Text>
-              </View>
-              <View style={styles.verticalLine} />
-              <View style={styles.statColumn}>
-                <View style={styles.iconRow}>
-                  <Ionicons name="time-outline" size={12} color={colors.text.tertiary} />
-                  <Text style={styles.statLabel}>Fecha Meta</Text>
-                </View>
-                <Text style={styles.statValue}>{mainGoal.deadline}</Text>
-              </View>
-            </View>
-          </>
-        )}
+  // Memoized card wrapper
+  const SlideCard = React.memo(({ children }: { children: React.ReactNode }) => (
+    <View style={styles.slideContainer}>
+      <View style={{
+        backgroundColor: '#000000ff',
+        borderRadius: 24,
+        padding: spacing.lg,
+        width: '90%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+      }}>
+        {children}
       </View>
-    );
-  };
+    </View>
+  ));
 
+  const renderSlide = useCallback(({ item }: { item: typeof slides[0] }) => {
+    return (
+      <SlideCard>
+        {item.type === 'balance' && (
+          <BalanceSlide
+            safeToSpend={safeToSpend}
+            pendingFixedExpenses={pendingFixedExpenses}
+            totalBalance={totalBalance}
+            isBalanceHidden={isBalanceHidden}
+            blurOpacity={blurOpacity}
+            togglePrivacy={togglePrivacy}
+            formatCurrency={formatCurrency}
+          />
+        )}
+
+        {item.type === 'budget' && budget && (
+          <BudgetSlide budget={budget} formatCurrency={formatCurrency} />
+        )}
+
+        {item.type === 'goal' && mainGoal && (
+          <GoalSlide goal={mainGoal} formatCurrency={formatCurrency} />
+        )}
+
+        {item.type === 'creditCard' && creditCard && (
+          <CreditCardSlide creditCard={creditCard} formatCurrency={formatCurrency} />
+        )}
+
+        {item.type === 'addBudget' && (
+          <EmptySlide
+            icon="wallet-outline"
+            title="Configura tu presupuesto"
+            subtitle="Controla tus gastos mensuales"
+            buttonText="Crear Presupuesto"
+            onPress={onPressAddBudget}
+          />
+        )}
+
+
+        {item.type === 'addGoal' && (
+          <EmptySlide
+            icon="flag-outline"
+            title="Define una meta"
+            subtitle="Ahorra para lo que más importa"
+            buttonText="Crear Meta"
+            onPress={onPressAddGoal}
+          />
+        )}
+      </SlideCard>
+    );
+  }, [
+    safeToSpend,
+    pendingFixedExpenses,
+    totalBalance,
+    isBalanceHidden,
+    blurOpacity,
+    togglePrivacy,
+    formatCurrency,
+    budget,
+    mainGoal,
+    creditCard,
+    onPressAddBudget,
+    onPressAddGoal,
+  ]);
 
   return (
     <View style={styles.container}>
-      <Carousel
-        loop={false}
-        width={SCREEN_WIDTH}
-        height={180} // Adjusted height based on content
-        autoPlay={false}
-        data={slides}
-        scrollAnimationDuration={500}
-        onSnapToItem={(index) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          setActiveIndex(index);
-        }}
-        renderItem={renderItem}
-
-      />
-
-      {/* Pagination Dots */}
-      <View style={styles.pagination}>
-        {/* Dots Container - using a wrapper to keep strict centering independent of the absolute icon */}
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {slides.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                { backgroundColor: i === activeIndex ? colors.text.inverse : 'rgba(255,255,255,0.2)' }
-              ]}
-            />
-          ))}
-        </View>
+      <View style={styles.carouselContainer}>
+        <Carousel
+          width={SCREEN_WIDTH}
+          height={280}
+          data={slides}
+          renderItem={renderSlide}
+          onSnapToItem={setActiveIndex}
+          loop={false}
+          pagingEnabled={true}
+          snapEnabled={true}
+          windowSize={2}
+        />
       </View>
+
+      <PaginationDots total={slides.length} activeIndex={activeIndex} />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 0,
-    width: '100%',
-    alignItems: 'center',
-  },
-  slideContainer: {
-    width: SCREEN_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  topSection: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    alignItems: 'center',
-    width: '100%',
-    position: 'relative',
-  },
-  labelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-    width: '100%', // Ensure it takes full width for strict centering
-  },
-  label: {
-    ...typography.caption,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    fontWeight: '700',
-    color: colors.text.tertiary,
-    textTransform: 'uppercase',
-  },
-  indicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginLeft: spacing.xs,
-  },
-  bigAmount: {
-    ...typography.display,
-    color: colors.text.inverse,
-    textAlign: 'center',
-    marginVertical: 2,
-    lineHeight: 42,
-    width: '90%',
-  },
-  subLabel: {
-    ...typography.caption,
-    fontSize: 12,
-    color: colors.text.tertiary,
-    fontWeight: '400',
-    marginTop: -4,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    width: '50%',
-    alignSelf: 'center',
-    marginVertical: spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    paddingBottom: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
-    gap: spacing.xl,
-    width: '100%',
-  },
-  statColumn: {
-    alignItems: 'center',
-  },
-  iconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-    gap: 4,
-  },
-  statLabel: {
-    ...typography.caption,
-    fontSize: 10,
-    color: colors.text.tertiary,
-  },
-  statValue: {
-    ...typography.body,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.inverse,
-  },
-  verticalLine: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    height: '80%',
-    alignSelf: 'center',
-    marginHorizontal: spacing.md,
-  },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 0, // Reduced top margin as the carousel has internal padding
-    gap: 6,
-    height: 10,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  actionSlide: {
-    width: '90%', // Slightly narrower to show it's different
-    height: 140,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.md,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  actionTitle: {
-    ...typography.body,
-    fontWeight: '600',
-    color: colors.text.inverse,
-    marginBottom: 4,
-  },
-  actionSubtitle: {
-    ...typography.caption,
-    fontSize: 12,
-    color: colors.text.tertiary,
-    textAlign: 'center',
-  },
-  alertSlide: {
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
-    borderStyle: 'solid',
-  },
-  alertTitle: {
-    ...typography.body,
-    fontWeight: '700',
-    color: colors.error,
-    marginBottom: 4,
-  },
-  alertSubtitle: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-});
