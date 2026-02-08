@@ -55,18 +55,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export const BalanceSection: React.FC<BalanceSectionProps> = ({
   totalBalance = 45230.50,
   pendingFixedExpenses = 12500.00,
-  budget = {
-    limit: 15000,
-    spent: 8500,
-    dailyRemaining: 325,
-  },
-  mainGoal = {
-    currentAmount: 12500,
-    targetAmount: 25000,
-    deadline: '31 Mar 2026',
-    name: 'Vacaciones',
-    percentage: 50,
-  },
+  budget,
+  mainGoal,
   creditCard,
   savingsChallenge,
   onPressAddBudget,
@@ -87,28 +77,9 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
     return `$${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
 
-  // Memoized card wrapper
-  const SlideCard = React.memo(({ children }: { children: React.ReactNode }) => (
-    <View style={styles.slideContainer}>
-      <View style={{
-        backgroundColor: '#000000ff',
-        borderRadius: 24,
-        padding: spacing.lg,
-        width: '90%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
-      }}>
-        {children}
-      </View>
-    </View>
-  ));
-
   const renderSlide = useCallback(({ item }: { item: typeof slides[0] }) => {
-    return (
-      <SlideCard>
+    const cardContent = (
+      <>
         {item.type === 'balance' && (
           <BalanceSlide
             safeToSpend={safeToSpend}
@@ -133,27 +104,38 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           <CreditCardSlide creditCard={creditCard} formatCurrency={formatCurrency} />
         )}
 
-        {item.type === 'addBudget' && (
+        {item.type === 'config' && (
           <EmptySlide
-            icon="wallet-outline"
-            title="Configura tu presupuesto"
-            subtitle="Controla tus gastos mensuales"
-            buttonText="Crear Presupuesto"
-            onPress={onPressAddBudget}
+            icon="settings-outline"
+            title="Personalizar Inicio"
+            subtitle="Configura qué información quieres ver aquí"
+            buttonText="Configurar"
+            onPress={onManageModules}
           />
         )}
+      </>
+    );
 
-
-        {item.type === 'addGoal' && (
-          <EmptySlide
-            icon="flag-outline"
-            title="Define una meta"
-            subtitle="Ahorra para lo que más importa"
-            buttonText="Crear Meta"
-            onPress={onPressAddGoal}
-          />
-        )}
-      </SlideCard>
+    return (
+      <View style={styles.slideContainer}>
+        <View style={{
+          backgroundColor: 'rgba(255,255,255,0.03)',
+          borderRadius: 24,
+          padding: spacing.lg,
+          width: '90%',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          elevation: 5,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.05)',
+          justifyContent: 'center',
+          minHeight: 220, // Fix for Android flex: 1 collapse
+        }}>
+          {cardContent}
+        </View>
+      </View>
     );
   }, [
     safeToSpend,
@@ -168,6 +150,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
     creditCard,
     onPressAddBudget,
     onPressAddGoal,
+    onManageModules,
   ]);
 
   return (

@@ -39,8 +39,7 @@ export type SlideType =
     | { type: 'goal'; priority: number; data: any }
     | { type: 'creditCard'; priority: number; data: any }
     | { type: 'alert'; priority: number; data: any }
-    | { type: 'addBudget'; priority: number }
-    | { type: 'addGoal'; priority: number };
+    | { type: 'config'; priority: number };
 
 /**
  * useBalanceSlides - Hook to manage slide configuration and priority
@@ -75,8 +74,6 @@ export const useBalanceSlides = ({
                 priority: isBudgetCritical ? 8 : 4,
                 data: budget,
             });
-        } else {
-            rawSlides.push({ type: 'addBudget', priority: 2 });
         }
 
         // Goal
@@ -86,8 +83,6 @@ export const useBalanceSlides = ({
                 priority: isGoalClose ? 7 : 3,
                 data: mainGoal,
             });
-        } else {
-            rawSlides.push({ type: 'addGoal', priority: 1 });
         }
 
         // Credit card
@@ -97,6 +92,11 @@ export const useBalanceSlides = ({
                 priority: isCreditCardUrgent ? 9 : 6,
                 data: creditCard,
             });
+        }
+
+        // Unified Configuration Slide (If elements are missing)
+        if (!budget || !mainGoal) {
+            rawSlides.push({ type: 'config', priority: 1 });
         }
 
         // Sort by priority (highest first)

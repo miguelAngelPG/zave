@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
     container: {
@@ -13,13 +13,13 @@ export const styles = StyleSheet.create({
     slideContainer: {
         width: '100%',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     topSection: {
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.sm,
         alignItems: 'center',
         width: '100%',
-        position: 'relative',
     },
     labelContainer: {
         flexDirection: 'row',
@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
     },
     label: {
         fontSize: 11,
-        color: colors.text.tertiary,
+        color: '#9CA3AF', // Gray-400
         fontWeight: '500',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
     bigAmount: {
         fontSize: 48,
         fontWeight: '700',
-        color: colors.text.inverse,
+        color: '#FFFFFF', // Force White
         textAlign: 'center',
         marginVertical: 2,
         lineHeight: 52,
@@ -50,14 +50,14 @@ export const styles = StyleSheet.create({
     },
     subLabel: {
         fontSize: 12,
-        color: colors.text.tertiary,
+        color: '#9CA3AF', // Gray-400
         textAlign: 'center',
         marginTop: spacing.xs,
     },
     separator: {
         height: 1,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        width: '50%',
+        width: '100%',
         marginVertical: spacing.md,
     },
     footer: {
@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 11,
-        color: colors.text.tertiary,
+        color: '#9CA3AF', // Gray-400
         fontWeight: '500',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
@@ -87,7 +87,7 @@ export const styles = StyleSheet.create({
     statValue: {
         fontSize: 16,
         fontWeight: '600',
-        color: colors.text.inverse,
+        color: '#FFFFFF', // Force White
     },
     verticalLine: {
         width: 1,
@@ -106,13 +106,13 @@ export const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: colors.text.tertiary,
+        backgroundColor: '#9CA3AF',
         opacity: 0.3,
     },
     activeDot: {
         width: 20,
         opacity: 1,
-        backgroundColor: colors.text.inverse,
+        backgroundColor: '#FFFFFF',
     },
     // Empty States
     emptyContainer: {
@@ -128,23 +128,23 @@ export const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: colors.text.inverse,
+        color: '#FFFFFF', // Force White
         textAlign: 'center',
     },
     emptySubtitle: {
         fontSize: 14,
-        color: colors.text.tertiary,
+        color: '#9CA3AF', // Gray-400
         textAlign: 'center',
         marginBottom: spacing.sm,
     },
     addButton: {
-        backgroundColor: colors.primary[500],
+        backgroundColor: '#6366F1', // Indigo-500
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.sm,
         borderRadius: 12,
     },
     addButtonText: {
-        color: colors.text.inverse,
+        color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -155,7 +155,7 @@ export const styles = StyleSheet.create({
     },
     progressLabel: {
         fontSize: 12,
-        color: colors.text.tertiary,
+        color: '#9CA3AF',
         marginBottom: spacing.xs,
         textAlign: 'center',
     },
