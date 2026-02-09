@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { Text } from '../../atoms/Text/Text';
 
 interface PrivacyBlurOverlayProps {
@@ -26,8 +26,8 @@ export const PrivacyBlurOverlay: React.FC<PrivacyBlurOverlayProps> = ({
     content,
     textStyle,
     containerStyle,
-    blurIntensity = 50,
-    shadowRadius = 16,
+    blurIntensity = Platform.OS === 'android' ? 100 : 50,
+    shadowRadius = Platform.OS === 'android' ? 30 : 16,
     borderRadius = 8,
 }) => {
     return (
@@ -61,13 +61,13 @@ export const PrivacyBlurOverlay: React.FC<PrivacyBlurOverlayProps> = ({
                         textStyle,
                         {
                             color: 'transparent',
-                            textShadowColor: 'rgba(255,255,255,0.9)',
+                            textShadowColor: 'rgba(255,255,255,0.8)',
                             textShadowOffset: { width: 0, height: 0 },
                             textShadowRadius: shadowRadius,
                         },
                     ]}
                 >
-                    {content}
+                    {content.replace(/[0-9]/g, '8')}
                 </Text>
             </Animated.View>
 

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
 import { Text } from '../../atoms/Text/Text';
 import { PrivacyBlurOverlay } from '../PrivacyBlurOverlay/PrivacyBlurOverlay';
 
@@ -26,7 +26,7 @@ export const BalanceFooterStat: React.FC<BalanceFooterStatProps> = ({
     return (
         <View style={styles.container}>
             <View style={styles.iconRow}>
-                <Ionicons name={icon} size={12} color={colors.text.tertiary} />
+                <Ionicons name={icon} size={12} color="#9CA3AF" />
                 <Text style={styles.label}>{label}</Text>
             </View>
 
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 11,
-        color: colors.text.tertiary,
+        color: '#9CA3AF', // Fixed Light Gray
         fontWeight: '500',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
     value: {
         fontSize: 16,
         fontWeight: '600',
-        color: colors.text.primary,
+        color: '#FFFFFF', // Fixed White
     },
 });
