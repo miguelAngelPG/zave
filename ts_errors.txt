@@ -1,0 +1,23 @@
+﻿src/components/molecules/AlertCard/AlertCard.tsx(26,31): error TS2339: Property 'main' does not exist on type '{ 50: string; 500: string; 600: string; }'.
+src/components/molecules/AlertCard/AlertCard.tsx(28,31): error TS2339: Property 'main' does not exist on type '{ 50: string; 500: string; 600: string; }'.
+src/components/molecules/AlertCard/AlertCard.tsx(52,32): error TS2322: Type '"medium"' is not assignable to type '"300" | "400" | "500" | "600" | "700" | "800" | undefined'.
+src/components/molecules/AlertCard/AlertCard.tsx(70,37): error TS2339: Property 'main' does not exist on type '{ 50: string; 500: string; 600: string; }'.
+src/components/organisms/BalanceSection/BudgetSlide.tsx(41,34): error TS2322: Type '{ progress: number; height: number; }' is not assignable to type 'IntrinsicAttributes & ProgressBarProps'.
+  Property 'progress' does not exist on type 'IntrinsicAttributes & ProgressBarProps'.
+src/components/organisms/BalanceSection/GoalSlide.tsx(41,34): error TS2322: Type '{ progress: number; height: number; }' is not assignable to type 'IntrinsicAttributes & ProgressBarProps'.
+  Property 'progress' does not exist on type 'IntrinsicAttributes & ProgressBarProps'.
+src/features/dashboard/components/TransactionItem.tsx(49,33): error TS2339: Property 'main' does not exist on type '{ 50: string; 500: string; 600: string; }'.
+src/features/dashboard/components/TransactionItem.tsx(62,32): error TS2322: Type '"medium"' is not assignable to type '"300" | "400" | "500" | "600" | "700" | "800" | undefined'.
+src/features/dashboard/components/TransactionItem.tsx(73,13): error TS2322: Type '"semibold"' is not assignable to type '"300" | "400" | "500" | "600" | "700" | "800" | undefined'.
+src/shared/services/apiClient.ts(1,58): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
+src/shared/services/apiClient.ts(27,14): error TS7006: Parameter 'config' implicitly has an 'any' type.
+src/shared/services/apiClient.ts(34,8): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/shared/services/apiClient.ts(41,8): error TS7006: Parameter 'response' implicitly has an 'any' type.
+src/shared/services/apiClient.ts(42,14): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/shared/services/financialService.ts(19,9): error TS2739: Type '{}' is missing the following properties from type 'FinancialSummary': totalBalance, monthlyIncome, monthlyExpenses, monthlyChange, accounts
+src/shared/services/financialService.ts(35,9): error TS2740: Type '{}' is missing the following properties from type 'Transaction[]': length, pop, push, concat, and 35 more.
+src/shared/services/financialService.ts(67,9): error TS2740: Type '{}' is missing the following properties from type 'Account[]': length, pop, push, concat, and 35 more.
+src/shared/services/financialService.ts(75,11): error TS2339: Property 'push' does not exist on type '{}'.
+src/shared/services/notificationService.ts(14,9): error TS2740: Type '{}' is missing the following properties from type 'Alert[]': length, pop, push, concat, and 35 more.
+src/shared/services/notificationService.ts(26,36): error TS2339: Property 'map' does not exist on type '{}'.
+src/shared/services/storageService.ts(2,30): error TS2307: Cannot find module 'expo-secure-store' or its corresponding type declarations.

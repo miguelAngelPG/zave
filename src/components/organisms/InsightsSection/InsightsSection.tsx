@@ -1,75 +1,102 @@
-import { spacing } from '@/src/theme';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { colors, spacing, typography } from '../../../theme';
 import { InsightsSectionProps } from '../../../types/insights.types';
 import { AIIcon } from '../../atoms/AIIcon/AIIcon';
+
+const getInsightStyle = (type: string) => {
+  switch (type) {
+    case 'warning':
+      return {
+        bg: 'rgba(239, 68, 68, 0.1)',
+        border: '#EF4444',
+        icon: 'alert-circle',
+        iconColor: '#EF4444',
+        buttonBg: 'rgba(239, 68, 68, 0.2)',
+        buttonText: '#FCA5A5'
+      };
+    case 'achievement':
+    case 'positive':
+      return {
+        bg: 'rgba(16, 185, 129, 0.1)',
+        border: '#10B981',
+        icon: 'trophy',
+        iconColor: '#10B981',
+        buttonBg: 'rgba(16, 185, 129, 0.2)',
+        buttonText: '#6EE7B7'
+      };
+    case 'info':
+    default:
+      return {
+        bg: 'rgba(59, 130, 246, 0.1)',
+        border: '#3B82F6',
+        icon: 'information-circle',
+        iconColor: '#3B82F6',
+        buttonBg: 'rgba(59, 130, 246, 0.2)',
+        buttonText: '#93C5FD'
+      };
+  }
+};
 
 export const InsightsSection: React.FC<InsightsSectionProps> = ({
   insights,
   onViewMore
 }) => (
   <View style={styles.container}>
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <AIIcon />
-          <Text style={styles.title}>Insights IA</Text>
-        </View>
-        <TouchableOpacity onPress={onViewMore} activeOpacity={0.7}>
-          <Text style={styles.viewMore}>Ver más</Text>
-        </TouchableOpacity>
+    {/* Header */}
+    <View style={styles.header}>
+      <View style={styles.titleContainer}>
+        <AIIcon />
+        <Text style={styles.title}>Oportunidades IA</Text>
       </View>
+      <TouchableOpacity onPress={onViewMore} activeOpacity={0.7}>
+        <Text style={styles.viewMore}>Ver todas</Text>
+      </TouchableOpacity>
+    </View>
 
-      {/* Subtitle */}
-      <Text style={styles.subtitle}>Recomendaciones personalizadas</Text>
+    {/* Insights List (Cards) */}
+    <View style={styles.listContainer}>
+      {insights.map((insight) => {
+        const styleConfig = getInsightStyle(insight.type);
 
-      {/* Insights List */}
-      <View style={styles.insightsList}>
-        {insights.map((insight, index) => (
-          <View key={insight.id} style={styles.insightItem}>
-            <View style={styles.bullet} />
-            <View style={styles.insightContent}>
-              <Text style={styles.insightText}>
-                {insight.message.includes('$340') ? (
-                  <>
-                    Puedes ahorrar <Text style={styles.highlight}>$340</Text> reduciendo gastos en entretenimiento
-                  </>
-                ) : insight.message.includes('12%') ? (
-                  <>
-                    Tu meta mensual va <Text style={styles.highlight}>12%</Text> adelantada
-                  </>
-                ) : (
-                  insight.message
-                )}
-              </Text>
-              {insight.subtitle && (
-                <Text style={styles.insightSubtitle}>{insight.subtitle}</Text>
-              )}
+        return (
+          <View key={insight.id} style={[styles.card, { backgroundColor: styleConfig.bg, borderColor: styleConfig.border }]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name={styleConfig.icon as any} size={24} color={styleConfig.iconColor} />
+              <View style={styles.textContainer}>
+                <Text style={styles.message}>{insight.message}</Text>
+                {insight.subtitle && <Text style={styles.subtitle}>{insight.subtitle}</Text>}
+              </View>
             </View>
+
+            {insight.actionLabel && (
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: styleConfig.buttonBg }]}
+                onPress={insight.onAction}
+              >
+                <Text style={[styles.actionText, { color: styleConfig.buttonText }]}>
+                  {insight.actionLabel}
+                </Text>
+                <Ionicons name="arrow-forward" size={14} color={styleConfig.buttonText} />
+              </TouchableOpacity>
+            )}
           </View>
-        ))}
-      </View>
+        );
+      })}
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#000000',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  card: {
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: spacing.md + 4, // 20px
+    paddingBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -77,53 +104,60 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  subtitle: {
-    color: '#9CA3AF',
-    fontSize: 14,
-    fontWeight: '400',
-    marginBottom: spacing.md + 4, // 20px
+    ...typography.h3,
+    color: colors.text.primary,
+    fontSize: 18,
   },
   viewMore: {
-    color: '#3B82F6',
-    fontSize: 14,
-    fontWeight: '500',
+    ...typography.caption,
+    color: colors.primary[500],
+    fontWeight: '600',
   },
-  insightsList: {
-    gap: spacing.md + 4, // 20px entre insights
+  listContainer: {
+    gap: spacing.md,
   },
-  insightItem: {
+  card: {
+    borderRadius: 16,
+    borderLeftWidth: 4, // Left accent border
+    padding: spacing.md,
+    // No full border, just background and left accent
+    borderTopWidth: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  cardHeader: {
     flexDirection: 'row',
+    gap: spacing.md,
     alignItems: 'flex-start',
-    gap: spacing.sm + 4, // 12px
   },
-  bullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#8B5CF6',
-    marginTop: 7, // Para alinear con el texto
-  },
-  insightContent: {
+  textContainer: {
     flex: 1,
+    gap: 4,
   },
-  insightText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '400',
+  message: {
+    ...typography.body,
+    color: colors.text.primary,
+    fontWeight: '600',
     lineHeight: 20,
   },
-  highlight: {
-    color: '#10B981',
-    fontWeight: '500',
+  subtitle: {
+    ...typography.caption,
+    color: colors.text.secondary,
   },
-  insightSubtitle: {
-    color: '#9CA3AF',
+  actionButton: {
+    marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-end', // Right align button
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  actionText: {
     fontSize: 12,
-    fontWeight: '400',
-    marginTop: 4,
-  },
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  }
 });

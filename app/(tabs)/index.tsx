@@ -1,15 +1,15 @@
 import { useColor } from '@/hooks/useColor';
-import { AccountsSection } from '@/src/components/organisms/AccountsSection/AccountsSection';
 import { AiChatModal } from '@/src/components/organisms/AiChatModal/AiChatModal';
 import { BalanceSection } from '@/src/components/organisms/BalanceSection/BalanceSection';
-import { GoalsSection } from '@/src/components/organisms/GoalsSection/GoalsSection';
+import { DashboardGrid } from '@/src/components/organisms/DashboardGrid/DashboardGrid'; // New Dashboard
 import { HeaderSection } from '@/src/components/organisms/HeaderSection/HeaderSection';
-import { TransactionList } from '@/src/components/organisms/TransactionList/TransactionList';
+import { DashboardProvider } from '@/src/context/DashboardContext';
 import { useScrollContext } from '@/src/context/ScrollContext';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -30,35 +30,35 @@ export default function HomeScreen() {
   });
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <Animated.ScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          paddingTop: insets.top + 10,
-          paddingBottom: 110,
-          paddingHorizontal: 24,
-          gap: 32,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <HeaderSection />
+    <DashboardProvider>
+      <View style={[styles.container, { backgroundColor }]}>
+        <Animated.ScrollView
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          contentContainerStyle={{
+            paddingTop: insets.top + 10,
+            paddingBottom: 110,
+            paddingHorizontal: 0, // Removed horizontal padding to allow full width sections if needed
+            gap: 24, // Reduced gap slightly
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ paddingHorizontal: 24 }}>
+            <HeaderSection />
+          </View>
 
-        {/* Balance Section (Dark/Glass) */}
-        <BalanceSection />
+          {/* Balance Section (Dark/Glass) */}
+          <BalanceSection />
 
-        {/* Accounts Carousel */}
-        <AccountsSection />
+          {/* Visual Dashboard Grid (Bento Style) */}
+          <View style={{ paddingHorizontal: 24 }}>
+            <DashboardGrid />
+          </View>
+        </Animated.ScrollView>
 
-        {/* Goals Progress */}
-        <GoalsSection />
-
-        {/* Recent Transactions */}
-        <TransactionList />
-      </Animated.ScrollView>
-
-      <AiChatModal visible={isChatVisible} onClose={() => setChatVisible(false)} />
-    </View>
+        <AiChatModal visible={isChatVisible} onClose={() => setChatVisible(false)} />
+      </View>
+    </DashboardProvider>
   );
 }
 

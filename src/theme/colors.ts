@@ -31,6 +31,23 @@ export const colors = {
     card: '#FFFFFF',
   },
   border: '#E5E7EB',
+  dashboard: {
+    background: '#18181B',
+    card: '#27272A',
+    border: 'rgba(255,255,255,0.1)',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#A1A1AA',
+    textMuted: '#71717A',
+    primary: '#A5B4FC',
+    primaryFocus: '#818CF8',
+    chartInactive: '#3F3F46',
+    accentPink: '#EC4899',
+    accentPinkLight: '#F472B6',
+    success: '#1DB954',
+    successBackground: 'rgba(29, 185, 84, 0.2)',
+    danger: '#F87171',
+    buttonBackground: 'rgba(255,255,255,0.05)',
+  }
 };
 
 export const darkTheme = {
