@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export type WidgetId = 'weekly-spend' | 'next-bill' | 'main-goal';
+export type WidgetSize = 'small' | 'large';
 
 export interface DashboardWidgetConfig {
     id: WidgetId;
@@ -9,12 +10,13 @@ export interface DashboardWidgetConfig {
     description: string;
     visible: boolean;
     order: number;
+    size: WidgetSize;
 }
 
 const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
-    { id: 'weekly-spend', title: 'Gasto Semanal', description: 'Monitorea tu ritmo de gasto diario', visible: true, order: 1 },
-    { id: 'next-bill', title: 'Próximo Pago', description: 'Recordatorio de tu próxima obligación', visible: true, order: 2 },
-    { id: 'main-goal', title: 'Meta Principal', description: 'Progreso de tu meta de ahorro', visible: true, order: 3 },
+    { id: 'weekly-spend', title: 'Gasto Semanal', description: 'Monitorea tu ritmo de gasto diario', visible: true, order: 1, size: 'large' },
+    { id: 'next-bill', title: 'Próximo Pago', description: 'Recordatorio de tu próxima obligación', visible: true, order: 2, size: 'small' },
+    { id: 'main-goal', title: 'Meta Principal', description: 'Progreso de tu meta de ahorro', visible: true, order: 3, size: 'large' },
 ];
 
 const STORAGE_KEY = '@zave_dashboard_widgets';
@@ -23,6 +25,8 @@ interface DashboardContextType {
     widgets: DashboardWidgetConfig[];
     toggleWidget: (id: WidgetId) => void;
     moveWidget: (id: WidgetId, direction: 'up' | 'down') => void;
+    resizeWidget: (id: WidgetId, size: WidgetSize) => void;
+    reorderWidgets: (newWidgets: DashboardWidgetConfig[]) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -59,6 +63,10 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         setWidgets(prev => prev.map(w => w.id === id ? { ...w, visible: !w.visible } : w));
     };
 
+    const resizeWidget = (id: WidgetId, size: WidgetSize) => {
+        setWidgets(prev => prev.map(w => w.id === id ? { ...w, size } : w));
+    };
+
     const moveWidget = (id: WidgetId, direction: 'up' | 'down') => {
         setWidgets(prev => {
             const index = prev.findIndex(w => w.id === id);
@@ -77,8 +85,12 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         });
     };
 
+    const reorderWidgets = (newWidgetsArr: DashboardWidgetConfig[]) => {
+        setWidgets(newWidgetsArr.map((w, i) => ({ ...w, order: i + 1 })));
+    };
+
     return (
-        <DashboardContext.Provider value={{ widgets, toggleWidget, moveWidget }}>
+        <DashboardContext.Provider value={{ widgets, toggleWidget, moveWidget, resizeWidget, reorderWidgets }}>
             {children}
         </DashboardContext.Provider>
     );

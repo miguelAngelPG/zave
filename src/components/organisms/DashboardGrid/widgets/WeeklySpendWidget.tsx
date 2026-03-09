@@ -4,27 +4,35 @@ import { StyleSheet, View } from 'react-native';
 import { colors, spacing } from '../../../../theme';
 import { Text } from '../../../atoms/Text/Text';
 
+import { WidgetSize } from '../../../../context/DashboardContext';
+
 export interface WeeklySpendWidgetProps {
     data: number[];
     maxSpend: number;
+    size?: WidgetSize;
 }
 
-export const WeeklySpendWidget: React.FC<WeeklySpendWidgetProps> = ({ data, maxSpend }) => {
+export const WeeklySpendWidget: React.FC<WeeklySpendWidgetProps> = ({ data, maxSpend, size = 'large' }) => {
+    const isSmall = size === 'small';
     return (
-        <View style={[styles.card, styles.largeCard]}>
+        <View style={[styles.card, isSmall ? styles.smallCard : styles.largeCard]}>
             <View style={styles.cardHeader}>
                 <Ionicons name="bar-chart-outline" size={18} color={colors.dashboard.primary} />
                 <Text style={styles.cardLabel}>Gasto Semanal</Text>
             </View>
             <View style={styles.chartContainer}>
-                {data.map((amount, i) => (
-                    <View key={i} style={styles.barContainer}>
-                        <View style={[styles.bar, { height: `${(amount / maxSpend) * 100}%`, backgroundColor: i === 3 ? colors.dashboard.primaryFocus : colors.dashboard.chartInactive, opacity: i === 3 ? 1 : 0.7 }]} />
-                    </View>
-                ))}
+                {data.slice(isSmall ? -4 : 0).map((amount, i, arr) => {
+                    const originalIndex = isSmall ? i + (data.length - 4) : i;
+                    const isToday = originalIndex === 3; // mock today logic
+                    return (
+                        <View key={originalIndex} style={styles.barContainer}>
+                            <View style={[styles.bar, { height: `${(amount / maxSpend) * 100}%`, backgroundColor: isToday ? colors.dashboard.primaryFocus : colors.dashboard.chartInactive, opacity: isToday ? 1 : 0.7 }]} />
+                        </View>
+                    );
+                })}
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                <Text style={styles.statUnit}>Lun</Text>
+                <Text style={styles.statUnit}>{isSmall ? 'Jue' : 'Lun'}</Text>
                 <Text style={styles.statUnit}>Dom</Text>
             </View>
         </View>
@@ -47,7 +55,12 @@ const styles = StyleSheet.create({
     },
     largeCard: {
         flexGrow: 1.5,
-        flexBasis: '50%',
+        flexBasis: '100%',
+        height: 170,
+    },
+    smallCard: {
+        flexGrow: 1,
+        flexBasis: '47%',
         height: 170,
     },
     cardHeader: {

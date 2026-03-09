@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider } from '@/theme/theme-provider';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
@@ -19,25 +20,27 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <StatusBar
-        backgroundColor="#000000"
-        translucent={false}
-        style="light"
-      />
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: '#000',
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </SafeAreaView>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <StatusBar
+          backgroundColor="#000000"
+          translucent={false}
+          style="light"
+        />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#fff',
+              },
+              headerTintColor: '#000',
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </SafeAreaView>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

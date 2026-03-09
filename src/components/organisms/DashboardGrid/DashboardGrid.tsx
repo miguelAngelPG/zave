@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useDashboard, WidgetId } from '../../../context/DashboardContext';
+import Animated from 'react-native-reanimated';
+import Sortable from 'react-native-sortables';
+import { DashboardWidgetConfig, useDashboard, WidgetId } from '../../../context/DashboardContext';
 import { colors, spacing, typography } from '../../../theme';
 import { Text } from '../../atoms/Text/Text';
 import { DashboardCustomizerModal } from './DashboardCustomizerModal';
@@ -24,13 +26,53 @@ const MOCK_DATA: Record<WidgetId, any> = {
 };
 
 export const DashboardGrid: React.FC = () => {
-    const { widgets } = useDashboard();
-    const [isCustomizing, setIsCustomizing] = useState(false);
+    const { widgets, toggleWidget, moveWidget, resizeWidget, reorderWidgets } = useDashboard();
+    const [isEditing, setIsEditing] = useState(false);
 
-    const renderWidget = (id: WidgetId) => {
-        const WidgetComponent = WIDGET_REGISTRY[id];
-        const widgetProps = MOCK_DATA[id];
-        return WidgetComponent ? <WidgetComponent key={id} {...widgetProps} /> : null;
+    const renderWidget = (w: DashboardWidgetConfig) => {
+        const WidgetComponent = WIDGET_REGISTRY[w.id];
+        const widgetProps = MOCK_DATA[w.id];
+        if (!WidgetComponent) return null;
+
+        const isSmall = w.size === 'small';
+
+        return (
+            <Animated.View
+                key={w.id}
+                style={[
+                    styles.widgetWrapper,
+                    isSmall ? styles.widgetWrapperSmall : styles.widgetWrapperLarge,
+                    isEditing && styles.widgetWrapperEditing
+                ]}
+            >
+                {/* Visual indicator of editing */}
+                {isEditing && (
+                    <View style={styles.editOverlay}>
+                        <View style={styles.editControlsTop}>
+                            <TouchableOpacity onPress={() => toggleWidget(w.id)} style={styles.editBtn}>
+                                <Ionicons name="eye-off-outline" size={18} color={colors.dashboard.textPrimary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => resizeWidget(w.id, w.size === 'small' ? 'large' : 'small')} style={styles.editBtn}>
+                                <Ionicons name={w.size === 'small' ? "expand-outline" : "contract-outline"} size={18} color={colors.dashboard.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.editControlsBottom}>
+                            <TouchableOpacity onPress={() => moveWidget(w.id, 'up')} style={styles.editBtn}>
+                                <Ionicons name="arrow-back-outline" size={18} color={colors.dashboard.textPrimary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => moveWidget(w.id, 'down')} style={styles.editBtn}>
+                                <Ionicons name="arrow-forward-outline" size={18} color={colors.dashboard.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
+                <View style={{ flex: 1, opacity: isEditing ? 0.6 : 1 }}>
+                    <WidgetComponent {...widgetProps} size={w.size} />
+                </View>
+            </Animated.View>
+        );
     };
 
     return (
@@ -38,23 +80,44 @@ export const DashboardGrid: React.FC = () => {
             <View style={styles.header}>
                 <Text style={styles.sectionTitle}>Tu Panorama</Text>
 
-                <TouchableOpacity style={styles.customizeBtn} onPress={() => setIsCustomizing(true)}>
-                    <Ionicons name="options-outline" size={18} color={colors.dashboard.textSecondary} />
-                    <Text style={styles.customizeText}>Personalizar</Text>
+                <TouchableOpacity
+                    style={[styles.customizeBtn, isEditing && styles.customizeBtnActive]}
+                    onPress={() => setIsEditing(!isEditing)}
+                >
+                    <Ionicons name={isEditing ? "checkmark-outline" : "options-outline"} size={18} color={isEditing ? colors.dashboard.background : colors.dashboard.textSecondary} />
+                    <Text style={[styles.customizeText, isEditing && { color: colors.dashboard.background }]}>
+                        {isEditing ? 'Listo' : 'Personalizar'}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.gridContainer}>
-                {widgets
-                    .filter(w => w.visible)
-                    // Ensure the array order dictates rendering
-                    .map(w => renderWidget(w.id))}
+            <View style={{ marginTop: spacing.xs }}>
+                <Sortable.Flex
+                    sortEnabled={isEditing}
+                    onDragEnd={({ order }) => {
+                        const newOrder = order(widgets.filter(w => w.visible || isEditing));
+                        if (isEditing) {
+                            reorderWidgets(newOrder);
+                        }
+                    }}
+                    rowGap={spacing.md}
+                    columnGap={spacing.md}
+                    activeItemScale={1.05}
+                    strategy="insert"
+                >
+                    {widgets.map(w => {
+                        if (!w.visible && !isEditing) return null;
+                        return renderWidget(w);
+                    })}
+                </Sortable.Flex>
             </View>
 
-            <DashboardCustomizerModal
-                visible={isCustomizing}
-                onClose={() => setIsCustomizing(false)}
-            />
+            {!isEditing && ( // fallback modal for other configs or to restore if the modal was still there? Let's just hide it if editing
+                <DashboardCustomizerModal
+                    visible={false} // Keeping it false for now, since we do inline editing
+                    onClose={() => { }}
+                />
+            )}
         </View>
     );
 };
@@ -91,9 +154,47 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
-    gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.md,
+    customizeBtnActive: {
+        backgroundColor: colors.dashboard.primary,
     },
+    widgetWrapper: {
+        // base layout is managed here
+    },
+    widgetWrapperSmall: {
+        flexGrow: 1,
+        flexBasis: '47%',
+    },
+    widgetWrapperLarge: {
+        flexGrow: 1,
+        flexBasis: '100%',
+    },
+    widgetWrapperEditing: {
+        transform: [{ scale: 0.98 }],
+    },
+    editOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 24, // match card radius
+        zIndex: 10,
+        justifyContent: 'space-between',
+        padding: 12,
+    },
+    editControlsTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    editControlsBottom: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    editBtn: {
+        backgroundColor: colors.dashboard.background,
+        padding: 8,
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
+    }
 });

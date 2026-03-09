@@ -4,20 +4,24 @@ import { StyleSheet, View } from 'react-native';
 import { colors, spacing } from '../../../../theme';
 import { Text } from '../../../atoms/Text/Text';
 
+import { WidgetSize } from '../../../../context/DashboardContext';
+
 export interface MainGoalWidgetProps {
     name: string;
     current: number;
     target: number;
     percentage: number;
+    size?: WidgetSize;
 }
 
-export const MainGoalWidget: React.FC<MainGoalWidgetProps> = ({ name, current, target, percentage }) => {
+export const MainGoalWidget: React.FC<MainGoalWidgetProps> = ({ name, current, target, percentage, size = 'large' }) => {
+    const isSmall = size === 'small';
     return (
-        <View style={[styles.card, styles.wideCard]}>
-            <View style={{ flex: 1, gap: 6 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="airplane" size={16} color={colors.dashboard.accentPinkLight} />
+        <View style={[styles.card, isSmall ? styles.smallCard : styles.wideCard]}>
+            <View style={{ flex: 1, gap: 6, justifyContent: isSmall ? 'center' : 'flex-start' }}>
+                <View style={{ flexDirection: isSmall ? 'column' : 'row', justifyContent: 'space-between', alignItems: isSmall ? 'flex-start' : 'center', marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: isSmall ? 8 : 0 }}>
+                        <Ionicons name="airplane" size={isSmall ? 20 : 16} color={colors.dashboard.accentPinkLight} />
                         <Text style={styles.goalTitle}>{name}</Text>
                     </View>
                     <Text style={styles.goalPercent}>{percentage}%</Text>
@@ -48,6 +52,13 @@ const styles = StyleSheet.create({
     wideCard: {
         flexGrow: 1,
         flexBasis: '100%',
+        height: 120, // To match horizontal layout of next bill
+        paddingVertical: 16,
+    },
+    smallCard: {
+        flexGrow: 1,
+        flexBasis: '47%',
+        height: 170, // To match vertical layout
         paddingVertical: 16,
     },
     goalTitle: {
