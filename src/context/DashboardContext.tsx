@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export type WidgetId = 'weekly-spend' | 'next-bill' | 'main-goal';
-export type WidgetSize = 'small' | 'large';
+export type WidgetSize = { cols: number; rows: number };
 
 export interface DashboardWidgetConfig {
     id: WidgetId;
@@ -14,9 +14,9 @@ export interface DashboardWidgetConfig {
 }
 
 const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
-    { id: 'weekly-spend', title: 'Gasto Semanal', description: 'Monitorea tu ritmo de gasto diario', visible: true, order: 1, size: 'large' },
-    { id: 'next-bill', title: 'Próximo Pago', description: 'Recordatorio de tu próxima obligación', visible: true, order: 2, size: 'small' },
-    { id: 'main-goal', title: 'Meta Principal', description: 'Progreso de tu meta de ahorro', visible: true, order: 3, size: 'large' },
+    { id: 'weekly-spend', title: 'Gasto Semanal', description: 'Monitorea tu ritmo de gasto diario', visible: true, order: 1, size: { cols: 4, rows: 2 } },
+    { id: 'next-bill', title: 'Próximo Pago', description: 'Recordatorio de tu próxima obligación', visible: true, order: 2, size: { cols: 2, rows: 2 } },
+    { id: 'main-goal', title: 'Meta Principal', description: 'Progreso de tu meta de ahorro', visible: true, order: 3, size: { cols: 4, rows: 2 } },
 ];
 
 const STORAGE_KEY = '@zave_dashboard_widgets';

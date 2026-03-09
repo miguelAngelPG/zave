@@ -12,8 +12,8 @@ export interface WeeklySpendWidgetProps {
     size?: WidgetSize;
 }
 
-export const WeeklySpendWidget: React.FC<WeeklySpendWidgetProps> = ({ data, maxSpend, size = 'large' }) => {
-    const isSmall = size === 'small';
+export const WeeklySpendWidget: React.FC<WeeklySpendWidgetProps> = ({ data, maxSpend, size = { cols: 4, rows: 2 } }) => {
+    const isSmall = size.cols <= 2;
     return (
         <View style={[styles.card, isSmall ? styles.smallCard : styles.largeCard]}>
             <View style={styles.cardHeader}>
@@ -55,11 +55,11 @@ const styles = StyleSheet.create({
     },
     largeCard: {
         flex: 1,
-        height: 170,
+        height: '100%',
     },
     smallCard: {
         flex: 1,
-        height: 170,
+        height: '100%',
     },
     cardHeader: {
         flexDirection: 'row',

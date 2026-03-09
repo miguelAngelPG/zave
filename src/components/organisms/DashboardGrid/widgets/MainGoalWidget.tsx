@@ -14,8 +14,8 @@ export interface MainGoalWidgetProps {
     size?: WidgetSize;
 }
 
-export const MainGoalWidget: React.FC<MainGoalWidgetProps> = ({ name, current, target, percentage, size = 'large' }) => {
-    const isSmall = size === 'small';
+export const MainGoalWidget: React.FC<MainGoalWidgetProps> = ({ name, current, target, percentage, size = { cols: 4, rows: 2 } }) => {
+    const isSmall = size.cols <= 2;
     return (
         <View style={[styles.card, isSmall ? styles.smallCard : styles.wideCard]}>
             <View style={{ flex: 1, gap: 6, justifyContent: isSmall ? 'center' : 'flex-start' }}>
@@ -51,12 +51,12 @@ const styles = StyleSheet.create({
     },
     wideCard: {
         flex: 1,
-        height: 120, // To match horizontal layout of next bill
+        height: '100%',
         paddingVertical: 16,
     },
     smallCard: {
         flex: 1,
-        height: 170, // To match vertical layout
+        height: '100%',
         paddingVertical: 16,
     },
     goalTitle: {

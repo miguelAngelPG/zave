@@ -13,8 +13,8 @@ export interface NextBillWidgetProps {
     size?: WidgetSize;
 }
 
-export const NextBillWidget: React.FC<NextBillWidgetProps> = ({ name, amount, date, size = 'small' }) => {
-    const isLarge = size === 'large';
+export const NextBillWidget: React.FC<NextBillWidgetProps> = ({ name, amount, date, size = { cols: 2, rows: 2 } }) => {
+    const isLarge = size.cols >= 4;
     return (
         <View style={[styles.card, isLarge ? styles.largeCard : styles.smallCard]}>
             {isLarge ? (
@@ -64,14 +64,14 @@ const styles = StyleSheet.create({
     },
     smallCard: {
         flex: 1,
-        height: 170,
+        height: '100%',
         backgroundColor: colors.dashboard.background,
         alignItems: 'center',
         justifyContent: 'center',
     },
     largeCard: {
         flex: 1,
-        height: 120, // slightly shorter for horizontal layout
+        height: '100%',
         backgroundColor: colors.dashboard.background,
         justifyContent: 'center',
     },

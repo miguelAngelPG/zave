@@ -7,7 +7,7 @@ import { colors, spacing, typography } from '../../../theme';
 import { Text } from '../../atoms/Text/Text';
 
 import { DashboardWidgetDrawer } from './DashboardWidgetDrawer';
-import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
+import { BASE_COL_WIDTH, BASE_ROW_HEIGHT, DashboardWidgetWrapper, GAP } from './DashboardWidgetWrapper';
 
 import { MainGoalWidget } from './widgets/MainGoalWidget';
 import { NextBillWidget } from './widgets/NextBillWidget';
@@ -58,24 +58,40 @@ export const DashboardGrid: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <View style={{ marginTop: spacing.xs }}>
+            <View style={{ marginTop: spacing.xs, minHeight: isEditing ? 500 : 0 }}>
+                {isEditing && (
+                    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}>
+                            {Array.from({ length: 24 }).map((_, i) => (
+                                <View
+                                    key={i}
+                                    style={{
+                                        width: BASE_COL_WIDTH,
+                                        height: BASE_ROW_HEIGHT,
+                                        backgroundColor: 'rgba(255,255,255,0.03)',
+                                        borderRadius: 20,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(255,255,255,0.08)',
+                                        borderStyle: 'dashed'
+                                    }}
+                                />
+                            ))}
+                        </View>
+                    </View>
+                )}
+
                 <Sortable.Flex
                     sortEnabled={isEditing}
                     onDragEnd={({ order }) => {
-                        const newOrder = order(widgets.filter(w => w.visible));
-                        if (isEditing) {
-                            reorderWidgets(newOrder);
-                        }
+                        const newOrderKeys = order(widgets.filter(w => w.visible));
+                        reorderWidgets(newOrderKeys);
                     }}
-                    rowGap={spacing.md}
-                    columnGap={spacing.md}
+                    rowGap={GAP}
+                    columnGap={GAP}
                     activeItemScale={1.03}
                     strategy="insert"
                 >
-                    {widgets.map(w => {
-                        if (!w.visible) return null; // Only render visible ones in the grid
-                        return renderWidget(w);
-                    })}
+                    {widgets.filter(w => w.visible).map(w => renderWidget(w))}
                 </Sortable.Flex>
             </View>
 
