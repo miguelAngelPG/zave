@@ -63,16 +63,14 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
     smallCard: {
-        flexGrow: 1,
-        flexBasis: '47%',
+        flex: 1,
         height: 170,
         backgroundColor: colors.dashboard.background,
         alignItems: 'center',
         justifyContent: 'center',
     },
     largeCard: {
-        flexGrow: 1,
-        flexBasis: '100%',
+        flex: 1,
         height: 120, // slightly shorter for horizontal layout
         backgroundColor: colors.dashboard.background,
         justifyContent: 'center',

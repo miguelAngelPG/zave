@@ -50,14 +50,12 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
     wideCard: {
-        flexGrow: 1,
-        flexBasis: '100%',
+        flex: 1,
         height: 120, // To match horizontal layout of next bill
         paddingVertical: 16,
     },
     smallCard: {
-        flexGrow: 1,
-        flexBasis: '47%',
+        flex: 1,
         height: 170, // To match vertical layout
         paddingVertical: 16,
     },

@@ -54,13 +54,11 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
     largeCard: {
-        flexGrow: 1.5,
-        flexBasis: '100%',
+        flex: 1,
         height: 170,
     },
     smallCard: {
-        flexGrow: 1,
-        flexBasis: '47%',
+        flex: 1,
         height: 170,
     },
     cardHeader: {

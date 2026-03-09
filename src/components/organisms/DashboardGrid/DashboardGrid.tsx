@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Sortable from 'react-native-sortables';
 import { DashboardWidgetConfig, useDashboard, WidgetId } from '../../../context/DashboardContext';
 import { colors, spacing, typography } from '../../../theme';
 import { Text } from '../../atoms/Text/Text';
-import { DashboardCustomizerModal } from './DashboardCustomizerModal';
+
+import { DashboardWidgetDrawer } from './DashboardWidgetDrawer';
+import { DashboardWidgetWrapper } from './DashboardWidgetWrapper';
 
 import { MainGoalWidget } from './widgets/MainGoalWidget';
 import { NextBillWidget } from './widgets/NextBillWidget';
@@ -34,44 +35,10 @@ export const DashboardGrid: React.FC = () => {
         const widgetProps = MOCK_DATA[w.id];
         if (!WidgetComponent) return null;
 
-        const isSmall = w.size === 'small';
-
         return (
-            <Animated.View
-                key={w.id}
-                style={[
-                    styles.widgetWrapper,
-                    isSmall ? styles.widgetWrapperSmall : styles.widgetWrapperLarge,
-                    isEditing && styles.widgetWrapperEditing
-                ]}
-            >
-                {/* Visual indicator of editing */}
-                {isEditing && (
-                    <View style={styles.editOverlay}>
-                        <View style={styles.editControlsTop}>
-                            <TouchableOpacity onPress={() => toggleWidget(w.id)} style={styles.editBtn}>
-                                <Ionicons name="eye-off-outline" size={18} color={colors.dashboard.textPrimary} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => resizeWidget(w.id, w.size === 'small' ? 'large' : 'small')} style={styles.editBtn}>
-                                <Ionicons name={w.size === 'small' ? "expand-outline" : "contract-outline"} size={18} color={colors.dashboard.textPrimary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.editControlsBottom}>
-                            <TouchableOpacity onPress={() => moveWidget(w.id, 'up')} style={styles.editBtn}>
-                                <Ionicons name="arrow-back-outline" size={18} color={colors.dashboard.textPrimary} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => moveWidget(w.id, 'down')} style={styles.editBtn}>
-                                <Ionicons name="arrow-forward-outline" size={18} color={colors.dashboard.textPrimary} />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
-
-                <View style={{ flex: 1, opacity: isEditing ? 0.6 : 1 }}>
-                    <WidgetComponent {...widgetProps} size={w.size} />
-                </View>
-            </Animated.View>
+            <DashboardWidgetWrapper key={w.id} widget={w} isEditing={isEditing}>
+                <WidgetComponent {...widgetProps} size={w.size} />
+            </DashboardWidgetWrapper>
         );
     };
 
@@ -95,29 +62,27 @@ export const DashboardGrid: React.FC = () => {
                 <Sortable.Flex
                     sortEnabled={isEditing}
                     onDragEnd={({ order }) => {
-                        const newOrder = order(widgets.filter(w => w.visible || isEditing));
+                        const newOrder = order(widgets.filter(w => w.visible));
                         if (isEditing) {
                             reorderWidgets(newOrder);
                         }
                     }}
                     rowGap={spacing.md}
                     columnGap={spacing.md}
-                    activeItemScale={1.05}
+                    activeItemScale={1.03}
                     strategy="insert"
                 >
                     {widgets.map(w => {
-                        if (!w.visible && !isEditing) return null;
+                        if (!w.visible) return null; // Only render visible ones in the grid
                         return renderWidget(w);
                     })}
                 </Sortable.Flex>
             </View>
 
-            {!isEditing && ( // fallback modal for other configs or to restore if the modal was still there? Let's just hide it if editing
-                <DashboardCustomizerModal
-                    visible={false} // Keeping it false for now, since we do inline editing
-                    onClose={() => { }}
-                />
-            )}
+            {/* Widget Drawer (Only in Edit Mode) */}
+            {isEditing && <DashboardWidgetDrawer />}
+
+
         </View>
     );
 };
@@ -156,45 +121,5 @@ const styles = StyleSheet.create({
     },
     customizeBtnActive: {
         backgroundColor: colors.dashboard.primary,
-    },
-    widgetWrapper: {
-        // base layout is managed here
-    },
-    widgetWrapperSmall: {
-        flexGrow: 1,
-        flexBasis: '47%',
-    },
-    widgetWrapperLarge: {
-        flexGrow: 1,
-        flexBasis: '100%',
-    },
-    widgetWrapperEditing: {
-        transform: [{ scale: 0.98 }],
-    },
-    editOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 24, // match card radius
-        zIndex: 10,
-        justifyContent: 'space-between',
-        padding: 12,
-    },
-    editControlsTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    editControlsBottom: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    editBtn: {
-        backgroundColor: colors.dashboard.background,
-        padding: 8,
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 4,
     }
 });
