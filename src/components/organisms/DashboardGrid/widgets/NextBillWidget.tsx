@@ -24,12 +24,12 @@ export const NextBillWidget: React.FC<NextBillWidgetProps> = ({ name, amount, da
                         <View style={[styles.iconBox, { width: 56, height: 56, backgroundColor: colors.dashboard.successBackground, borderColor: colors.dashboard.success }]}>
                             <Ionicons name="musical-notes" size={28} color={colors.dashboard.success} />
                         </View>
-                        <View>
-                            <Text style={[styles.billTitleCompact, { textAlign: 'left', fontSize: 16 }]}>{name}</Text>
-                            <Text style={[styles.billDateCompact, { textAlign: 'left', fontSize: 14 }]}>{date}</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.billTitleCompact, { textAlign: 'left', fontSize: 16 }]}>{name}</Text>
+                            <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.billDateCompact, { textAlign: 'left', fontSize: 14 }]}>{date}</Text>
                         </View>
                     </View>
-                    <Text style={[styles.billAmountCompact, { fontSize: 24 }]}>${amount}</Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.billAmountCompact, { fontSize: 24, marginLeft: 8 }]}>${amount}</Text>
                 </View>
             ) : (
                 // Vertical Layout for small
@@ -37,10 +37,10 @@ export const NextBillWidget: React.FC<NextBillWidgetProps> = ({ name, amount, da
                     <View style={[styles.iconBox, { width: 48, height: 48, marginBottom: 8, backgroundColor: colors.dashboard.successBackground, borderColor: colors.dashboard.success }]}>
                         <Ionicons name="musical-notes" size={24} color={colors.dashboard.success} />
                     </View>
-                    <View>
-                        <Text style={styles.billTitleCompact}>{name}</Text>
-                        <Text style={styles.billDateCompact}>{date}</Text>
-                        <Text style={styles.billAmountCompact}>${amount}</Text>
+                    <View style={{ width: '100%', alignItems: 'center' }}>
+                        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.billTitleCompact}>{name}</Text>
+                        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.billDateCompact}>{date}</Text>
+                        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.billAmountCompact}>${amount}</Text>
                     </View>
                 </>
             )}

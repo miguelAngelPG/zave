@@ -18,7 +18,7 @@ export const WeeklySpendWidget: React.FC<WeeklySpendWidgetProps> = ({ data, maxS
         <View style={[styles.card, isSmall ? styles.smallCard : styles.largeCard]}>
             <View style={styles.cardHeader}>
                 <Ionicons name="bar-chart-outline" size={18} color={colors.dashboard.primary} />
-                <Text style={styles.cardLabel}>Gasto Semanal</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit style={styles.cardLabel}>Gasto Semanal</Text>
             </View>
             <View style={styles.chartContainer}>
                 {data.slice(isSmall ? -4 : 0).map((amount, i, arr) => {

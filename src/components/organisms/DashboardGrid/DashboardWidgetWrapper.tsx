@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { DashboardWidgetConfig, useDashboard } from '../../../context/DashboardContext';
 import { colors, spacing } from '../../../theme';
 
@@ -14,15 +14,17 @@ interface Props {
 
 // 4-column system math
 export const { width: windowWidth } = Dimensions.get('window');
-export const GRID_PADDING = 32; // approx lateral padding from DashboardGrid container/parent
+export const GRID_PADDING = 48; // 24 paddingHorizontal * 2 from index layout
 export const GAP = spacing.md;
-export const BASE_COL_WIDTH = (windowWidth - GRID_PADDING - GAP * 3) / 4;
+export const BASE_COL_WIDTH = Math.floor((windowWidth - GRID_PADDING - GAP * 3) / 4);
 export const BASE_ROW_HEIGHT = BASE_COL_WIDTH; // square cells
 
 export const DashboardWidgetWrapper: React.FC<Props> = ({ widget: w, isEditing, children }) => {
     const { toggleWidget, resizeWidget } = useDashboard();
 
     // Reanimated shared values for previewing size dynamically
+    const startCols = useSharedValue(w.size.cols);
+    const startRows = useSharedValue(w.size.rows);
     const previewCols = useSharedValue(w.size.cols);
     const previewRows = useSharedValue(w.size.rows);
 
@@ -33,12 +35,16 @@ export const DashboardWidgetWrapper: React.FC<Props> = ({ widget: w, isEditing, 
 
     const resizeGesture = Gesture.Pan()
         .enabled(isEditing)
+        .onStart(() => {
+            startCols.value = previewCols.value;
+            startRows.value = previewRows.value;
+        })
         .onUpdate((e) => {
             const deltaCols = Math.round(e.translationX / (BASE_COL_WIDTH + GAP));
             const deltaRows = Math.round(e.translationY / (BASE_ROW_HEIGHT + GAP));
 
-            const newCols = Math.max(1, Math.min(4, w.size.cols + deltaCols));
-            const newRows = Math.max(1, Math.min(4, w.size.rows + deltaRows));
+            const newCols = Math.max(1, Math.min(4, startCols.value + deltaCols));
+            const newRows = Math.max(1, Math.min(4, startRows.value + deltaRows));
 
             if (previewCols.value !== newCols || previewRows.value !== newRows) {
                 previewCols.value = newCols;
@@ -46,15 +52,15 @@ export const DashboardWidgetWrapper: React.FC<Props> = ({ widget: w, isEditing, 
             }
         })
         .onEnd(() => {
-            if (previewCols.value !== w.size.cols || previewRows.value !== w.size.rows) {
+            if (previewCols.value !== startCols.value || previewRows.value !== startRows.value) {
                 runOnJS(resizeWidget)(w.id, { cols: previewCols.value, rows: previewRows.value });
             }
         });
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
-            width: withSpring(previewCols.value * BASE_COL_WIDTH + (previewCols.value - 1) * GAP, { damping: 16, stiffness: 120 }),
-            height: withSpring(previewRows.value * BASE_ROW_HEIGHT + (previewRows.value - 1) * GAP, { damping: 16, stiffness: 120 }),
+            width: withTiming(previewCols.value * BASE_COL_WIDTH + (previewCols.value - 1) * GAP, { duration: 150 }),
+            height: withTiming(previewRows.value * BASE_ROW_HEIGHT + (previewRows.value - 1) * GAP, { duration: 150 }),
         };
     });
 
@@ -76,7 +82,7 @@ export const DashboardWidgetWrapper: React.FC<Props> = ({ widget: w, isEditing, 
                 </View>
             )}
 
-            <View style={{ flex: 1, opacity: isEditing ? 0.8 : 1 }} pointerEvents={isEditing ? 'none' : 'auto'}>
+            <View style={{ flex: 1, opacity: isEditing ? 0.8 : 1, overflow: 'hidden', borderRadius: 24 }} pointerEvents={isEditing ? 'none' : 'auto'}>
                 {children}
             </View>
 
@@ -101,9 +107,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: 24, // match card radius
         zIndex: 10,
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         padding: 12,
-        pointerEvents: 'none'
     },
     editControlsTop: {
         flexDirection: 'row',

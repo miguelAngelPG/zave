@@ -88,7 +88,6 @@ export const DashboardGrid: React.FC = () => {
                     }}
                     rowGap={GAP}
                     columnGap={GAP}
-                    activeItemScale={1.03}
                     strategy="insert"
                 >
                     {widgets.filter(w => w.visible).map(w => renderWidget(w))}
