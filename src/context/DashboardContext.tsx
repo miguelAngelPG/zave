@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-export type WidgetId = 'weekly-spend' | 'next-bill' | 'main-goal';
+export type WidgetId = 'weekly-spend' | 'next-bill' | 'main-goal' | 'recent-transactions' | 'savings-rule';
 export type WidgetSize = { cols: number; rows: number };
 
 export interface DashboardWidgetConfig {
@@ -17,6 +17,8 @@ const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
     { id: 'weekly-spend', title: 'Gasto Semanal', description: 'Monitorea tu ritmo de gasto diario', visible: true, order: 1, size: { cols: 4, rows: 2 } },
     { id: 'next-bill', title: 'Próximo Pago', description: 'Recordatorio de tu próxima obligación', visible: true, order: 2, size: { cols: 2, rows: 2 } },
     { id: 'main-goal', title: 'Meta Principal', description: 'Progreso de tu meta de ahorro', visible: true, order: 3, size: { cols: 4, rows: 2 } },
+    { id: 'recent-transactions', title: 'Movimientos', description: 'Tus últimas transacciones', visible: false, order: 4, size: { cols: 2, rows: 4 } },
+    { id: 'savings-rule', title: 'Regla Activa', description: 'Tu regla de ahorro de redondeo', visible: false, order: 5, size: { cols: 2, rows: 2 } },
 ];
 
 const STORAGE_KEY = '@zave_dashboard_widgets';
@@ -41,7 +43,15 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
             try {
                 const stored = await AsyncStorage.getItem(STORAGE_KEY);
                 if (stored) {
-                    setWidgets(JSON.parse(stored));
+                    const parsedStored = JSON.parse(stored) as DashboardWidgetConfig[];
+                    const storedIds = new Set(parsedStored.map(w => w.id));
+                    const newWidgets = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id));
+
+                    if (newWidgets.length > 0) {
+                        setWidgets([...parsedStored, ...newWidgets]);
+                    } else {
+                        setWidgets(parsedStored);
+                    }
                 }
             } catch (e) {
                 console.error("Failed to load dashboard config", e);

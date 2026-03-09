@@ -2,11 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
-import { useDashboard } from '../../../context/DashboardContext';
+import { DashboardWidgetConfig, useDashboard } from '../../../context/DashboardContext';
 import { colors, spacing, typography } from '../../../theme';
 import { Text } from '../../atoms/Text/Text';
+import { BASE_COL_WIDTH, BASE_ROW_HEIGHT, GAP } from './DashboardWidgetWrapper';
 
-export const DashboardWidgetDrawer: React.FC = () => {
+interface Props {
+    renderWidgetPreview: (w: DashboardWidgetConfig) => React.ReactNode;
+}
+
+export const DashboardWidgetDrawer: React.FC<Props> = ({ renderWidgetPreview }) => {
     const { widgets, toggleWidget } = useDashboard();
     const inactiveWidgets = widgets.filter(w => !w.visible);
 
@@ -23,23 +28,31 @@ export const DashboardWidgetDrawer: React.FC = () => {
                 {inactiveWidgets.length === 0 && (
                     <Text style={styles.emptyDrawerText}>¡Ya tienes todos los widgets activos!</Text>
                 )}
-                {inactiveWidgets.map(w => (
-                    <View key={w.id} style={styles.drawerItem}>
-                        <View style={styles.drawerItemInfo}>
-                            <Ionicons name="grid-outline" size={20} color={colors.dashboard.primary} />
-                            <View>
-                                <Text style={styles.drawerItemTitle}>{w.title}</Text>
-                                <Text style={styles.drawerItemDesc}>{w.description}</Text>
-                            </View>
-                        </View>
-                        <TouchableOpacity
-                            style={styles.drawerAddBtn}
-                            onPress={() => toggleWidget(w.id)}
+                <View style={styles.widgetPreviews}>
+                    {inactiveWidgets.map(w => (
+                        <View
+                            key={w.id}
+                            style={{
+                                width: w.size.cols * BASE_COL_WIDTH + (w.size.cols - 1) * GAP,
+                                height: w.size.rows * BASE_ROW_HEIGHT + (w.size.rows - 1) * GAP,
+                                position: 'relative',
+                            }}
                         >
-                            <Ionicons name="add-outline" size={20} color={colors.dashboard.background} />
-                        </TouchableOpacity>
-                    </View>
-                ))}
+                            <View style={{ flex: 1, pointerEvents: 'none' }}>
+                                {renderWidgetPreview(w)}
+                            </View>
+
+                            <TouchableOpacity
+                                style={styles.drawerAddOverlay}
+                                onPress={() => toggleWidget(w.id)}
+                            >
+                                <View style={styles.drawerAddIconBg}>
+                                    <Ionicons name="add" size={24} color={colors.dashboard.background} />
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
             </View>
         </Animated.View>
     );
@@ -65,36 +78,30 @@ const styles = StyleSheet.create({
     drawerGrid: {
         gap: spacing.sm,
     },
-    drawerItem: {
+    widgetPreviews: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: GAP,
         alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: colors.dashboard.card,
-        padding: spacing.md,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.dashboard.border,
+        paddingBottom: spacing.xxl,
     },
-    drawerItemInfo: {
-        flexDirection: 'row',
+    drawerAddOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 24,
         alignItems: 'center',
-        gap: 12,
-        flex: 1,
+        justifyContent: 'center',
+        zIndex: 5,
     },
-    drawerItemTitle: {
-        fontWeight: '700',
-        color: colors.dashboard.textPrimary,
-        fontSize: 15,
-    },
-    drawerItemDesc: {
-        color: colors.dashboard.textSecondary,
-        fontSize: 12,
-        marginTop: 2,
-    },
-    drawerAddBtn: {
-        backgroundColor: colors.dashboard.primary,
-        padding: 8,
-        borderRadius: 12,
+    drawerAddIconBg: {
+        backgroundColor: colors.dashboard.primaryFocus,
+        padding: 12,
+        borderRadius: 30,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
     },
     emptyDrawerText: {
         color: colors.dashboard.textMuted,
